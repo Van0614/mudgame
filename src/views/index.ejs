@@ -1,37 +1,89 @@
 <html>
-  <head>
-      <script
-  src="https://code.jquery.com/jquery-3.5.1.min.js"
-  integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
-  crossorigin="anonymous"></script>
-  <body>
-    <%= gameName %>에 온 걸 환영합니다. 당신의 이름은?
-    <div class=""></div>
+<head>
+    <script
+            src="https://code.jquery.com/jquery-3.5.1.min.js"
+            integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+            crossorigin="anonymous"></script>
+<body>
+<%= gameName %>에 온 걸 환영합니다.
+<br>
+당신의 이름은?
+<br>
+<br>
+<div class=""></div>
 
-    <form id="form" action="/signup">
-        이름: <input name="name"/>
-        <input type="submit" value="확인"/>
-    </form>
+<form id="form" action="/signup" style="outline: 1px solid green; width:250px; padding:20">
+    이름: <input name="name"/>
+    <input id="str" name="str" style="display: none"/>
+    <input id="def" name="def" style="display: none"/>
+    <input id="hp" name="hp" style="display: none"/>
+    <br>
+    <p>
+        공격력 <span id="starting-str">0</span>
+    </p>
+    <p>
+        방어력 <span id="starting-def">0</span>
+    </p>
+    <p>
+        체력 <span id="starting-hp">0</span>
+    </p>
 
-    <script>
+    <button type="button" id="new-stat">
+        능력치 재선택 (5회 남음)
+    </button>
+    <input type="submit" value="확인"/>
+</form>
 
-    const key = localStorage.getItem('_key');
-    if (key) {
-      location.href = '/game';
+<script>
+  let restartChance = 5;
+  let startingStat = {
+    str: 4,
+    def: 4,
+    hp: 11
+  }
+  $('#starting-str').html(startingStat.str)
+  $('#starting-def').html(startingStat.def)
+  $('#starting-hp').html(startingStat.hp)
+  $('input#str').val(startingStat.str)
+  $('input#def').val(startingStat.def)
+  $('input#hp').val(startingStat.hp)
+
+  $('#new-stat').click(function () {
+    restartChance -= 1
+    $('#new-stat').html(`능력치 재선택 (${restartChance}회 남음)`)
+    if (restartChance <= 0) {
+      $('#new-stat').attr('disabled', true);
     }
-     $('#form').submit(function(e) {
-       e.preventDefault();
-       const action = $(this).attr('action');
-       $.post(action, $(this).serialize(),(res) => {
-         if(res.key) {
-          localStorage.setItem('_key', res.key);
-          location.href = '/game';
-         }
-         else {
-          alert("에러가 발생했습니다. 다시 시도해주세요.");
-         }
-       });
-     });
-    </script>
-  </body>
+    randomStart()
+  })
+  const randomStart = () => {
+    startingStat.str = 2 + Math.floor(Math.random() * 5);
+    startingStat.def = 2 + Math.floor(Math.random() * 5);
+    startingStat.hp = 8 + Math.floor(Math.random() * 5);
+    $('#starting-str').html(startingStat.str)
+    $('#starting-def').html(startingStat.def)
+    $('#starting-hp').html(startingStat.hp)
+    $('input#str').val(startingStat.str)
+    $('input#def').val(startingStat.def)
+    $('input#hp').val(startingStat.hp)
+  }
+
+  const key = localStorage.getItem('_key');
+  if (key) {
+    location.href = '/game';
+  }
+  $('#form').submit(function (e) {
+    e.preventDefault();
+    const action = $(this).attr('action');
+    $.post(action, $(this).serialize(), (res) => {
+      if (res.key) {
+        localStorage.setItem('_key', res.key);
+        location.href = '/game';
+      } else {
+        alert("에러가 발생했습니다. 다시 시도해주세요.");
+      }
+    });
+  });
+</script>
+</body>
 </html>
