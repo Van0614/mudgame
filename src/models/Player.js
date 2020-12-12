@@ -16,7 +16,9 @@ const schema = new Schema({
   itemDef: {type: Number, default: 5},
   x: {type: Number, default: 0},
   y: {type: Number, default: 0},
-  items: {type: Array, default: []}
+  items: {type: Array, default: []},
+  exp: {type: Number, default: 0},
+  level: {type: Number, default: 1},
 });
 schema.methods.incrementHP = function (val) {
   const hp = this.HP + val;

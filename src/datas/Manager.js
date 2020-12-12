@@ -1,7 +1,8 @@
 const fs = require("fs");
 
 class Manager {
-  constructor() {}
+  constructor() {
+  }
 }
 
 class ConstantManager extends Manager {
@@ -32,6 +33,7 @@ class MapManager extends Manager {
     return this.fields[`${x}_${y}`];
   }
 }
+
 const constantManager = new ConstantManager(
   JSON.parse(fs.readFileSync(__dirname + "/constants.json"))
 );
@@ -39,6 +41,14 @@ const constantManager = new ConstantManager(
 const mapManager = new MapManager(
   JSON.parse(fs.readFileSync(__dirname + "/map.json"))
 );
+
+const damageCalculator = (attack, defense) => {
+  if (attack - defense > 0) {
+    return attack - defense
+  } else {
+    return 1
+  }
+}
 
 module.exports = {
   constantManager,

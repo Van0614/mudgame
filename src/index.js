@@ -54,7 +54,9 @@ app.post("/signup", async (req, res) => {
     itemDef: 0,  // TODO: 아이템 능력치를 여기에 추가
     x: 0,
     y: 0,
-    items: []  // TODO: 아이템 아이디를 여기에 추가
+    items: [],  // TODO: 아이템 아이디를 여기에 추가
+    exp: 0,
+    level: 1
   });
 
   const key = crypto.randomBytes(24).toString("hex");
@@ -95,6 +97,9 @@ app.post("/action", authentication, async (req, res) => {
 
     const events = field.events;
     const actions = [];
+
+    // 이벤트를 1) 고르고, 2) 실행한다.
+    // 전투시, damageCalculator(공격력, 수비력)=> {감소하는 체력} 함수 활용
     if (events.length > 0) {  // TODO : 이 부분 통째로 변경
       const _event = events[0];
       if (_event.type === "battle") {
@@ -109,6 +114,7 @@ app.post("/action", authentication, async (req, res) => {
       }
     }
 
+    // 사망 이벤트 처리
     if (player.HP <= 0) {
       // TODO: 으악 주금!
       player.HP = player.maxHP

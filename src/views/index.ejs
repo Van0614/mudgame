@@ -5,34 +5,71 @@
             integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
             crossorigin="anonymous"></script>
 <body>
-<%= gameName %>에 온 걸 환영합니다.
+<h1>
+    <%= gameName %>
+</h1>
 <br>
-당신의 이름은?
+계정이 있다면 로그인을, 없다면 회원가입을 해주세요
 <br>
-<br>
-<div class=""></div>
+<div>
+    <div style="width: 320px; height: 320px; display: inline-block; vertical-align:top;">
+        <h3>
+            로그인
+        </h3>
+        <form id="login-form" action="/signin" style="outline: 1px solid green; width:250px; padding:20px">
+            <div style="width:70px; display: inline-block;">
+                ID:
+            </div>
+            <input id="id" name="id"/>
+            <br>
+            <br>
+            <div style="width:70px; display: inline-block;">
+                Password:
+            </div>
+            <input id="password" name="password"/>
+            <input type="submit" value="로그인"/>
+        </form>
+    </div>
+    <div style="width: 320px; height: 320px; display: inline-block; vertical-align:top;">
+        <h3>
+            회원가입
+        </h3>
+        <form id="form" action="/signup" style="outline: 1px solid green; width:250px; padding:20px">
+            <div style="width:70px; display: inline-block;">
+                ID:
+            </div>
+            <input id="id" name="id"/>
+            <br>
+            <br>
+            <div style="width:70px; display: inline-block;">
+                Password:
+            </div>
+            <input id="password" name="password"/>
+            <br>
+            <br>
+            이름: <input name="name"/>
+            <input id="str" name="str" style="display: none"/>
+            <input id="def" name="def" style="display: none"/>
+            <input id="hp" name="hp" style="display: none"/>
+            <br>
+            <p>
+                공격력 <span id="starting-str">0</span>
+            </p>
+            <p>
+                방어력 <span id="starting-def">0</span>
+            </p>
+            <p>
+                체력 <span id="starting-hp">0</span>
+            </p>
 
-<form id="form" action="/signup" style="outline: 1px solid green; width:250px; padding:20">
-    이름: <input name="name"/>
-    <input id="str" name="str" style="display: none"/>
-    <input id="def" name="def" style="display: none"/>
-    <input id="hp" name="hp" style="display: none"/>
-    <br>
-    <p>
-        공격력 <span id="starting-str">0</span>
-    </p>
-    <p>
-        방어력 <span id="starting-def">0</span>
-    </p>
-    <p>
-        체력 <span id="starting-hp">0</span>
-    </p>
+            <button type="button" id="new-stat">
+                능력치 재선택 (5회 남음)
+            </button>
+            <input type="submit" value="계정 생성"/>
+        </form>
+    </div>
 
-    <button type="button" id="new-stat">
-        능력치 재선택 (5회 남음)
-    </button>
-    <input type="submit" value="확인"/>
-</form>
+</div>
 
 <script>
   let restartChance = 5;
