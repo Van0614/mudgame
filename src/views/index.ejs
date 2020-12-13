@@ -151,7 +151,7 @@
     });
   });
 
-  $('#login-form').submit(function (e) {     // TODO
+  $('#login-form').submit(function (e) {
     e.preventDefault();
     const action = $(this).attr('action');
     $.post(action, $(this).serialize(), (res) => {
@@ -159,7 +159,7 @@
         localStorage.setItem('_key', res.key);
         location.href = '/game';
       } else {
-        alert("에러가 발생했습니다. 다시 시도해주세요.");
+        alert("아이디나 비밀번호를 확인해주세요.");
       }
     });
   });

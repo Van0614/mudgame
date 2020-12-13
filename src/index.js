@@ -96,6 +96,7 @@ app.post("/signin", async (req, res) => {
   if (await Player.exists({id, password})) {
     // TODO: auth 체크
     const key = crypto.randomBytes(24).toString("hex");
+    const player = await Player.findOne({id, password})
     player.key = key;
     await player.save();
     return res.send({key});
