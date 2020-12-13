@@ -38,33 +38,70 @@ app.get("/game", (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
-  const {name, str, def, hp} = req.body;
+  const {id, password, name,} = req.body;
 
-  if (await Player.exists({name})) {
-    return res.status(400).send({error: "Player already exists"});
+  if (await Player.exists({id})) { // 새롭게 계정을 만드는 경우.
+    return res.status(400).send({error: "Player with same id already exists"});
+  } else {
+    const player = new Player({
+      id,
+      password,
+      name,
+      maxHP: 10,
+      HP: 10,
+      str: 4,
+      itemStr: 0,
+      def: 4,
+      itemDef: 0,
+      x: 0,
+      y: 0,
+      items: [],
+      exp: 0,
+      level: 1,
+      statChangeChance: 5
+    });
+    await player.save()
+    return res.status(200).send({success: true, message: "Successfully made new user. Please log in."});
   }
+})
 
-  const player = new Player({
-    name,
-    maxHP: hp,
-    HP: hp,
-    str: str,
-    itemStr: 0,   // TODO: 아이템 능력치를 여기에 추가
-    def: def,
-    itemDef: 0,  // TODO: 아이템 능력치를 여기에 추가
-    x: 0,
-    y: 0,
-    items: [],  // TODO: 아이템 아이디를 여기에 추가
-    exp: 0,
-    level: 1
-  });
+app.post("/stat", async (req, res) => {
+  // Change starting stat, deduct change by 1
+  const {id, password, str, def, hp, final} = req.body;
+  const player = await Player.findOne({id, password});
+  if (player.statChangeChance > 0 || final === 'true') {
+    player.str = str;
+    player.def = def;
+    player.hp = hp;
+    player.statChangeChance -= 1;
+    if (final === true || final === "true") {
+      player.statChangeChance = 0
+    }
+    await player.save();
+    return res.send({
+      success: true,
+      message: 'changed starting stat',
+      chance: player.statChangeChance,
+      str: str,
+      def: def,
+      hp: hp,
+    });
+  } else {
+    return res.status(400).send({error: "Chance all used up. Cannot change stat"});
+  }
+})
 
-  const key = crypto.randomBytes(24).toString("hex");
-  player.key = key;
-
-  await player.save();
-
-  return res.send({key});
+app.post("/signin", async (req, res) => {
+  const {id, password} = req.body;
+  if (await Player.exists({id, password})) {
+    // TODO: auth 체크
+    const key = crypto.randomBytes(24).toString("hex");
+    player.key = key;
+    await player.save();
+    return res.send({key});
+  } else {
+    return res.status(400).send({error: "No such player. Wrong id or password"});
+  }
 });
 
 app.post("/action", authentication, async (req, res) => {

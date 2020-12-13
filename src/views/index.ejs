@@ -12,46 +12,55 @@
 계정이 있다면 로그인을, 없다면 회원가입을 해주세요
 <br>
 <div>
-    <div style="width: 320px; height: 320px; display: inline-block; vertical-align:top;">
+    <div id="login-box" style="width: 320px; height: 320px; display: inline-block; vertical-align:top;">
         <h3>
             로그인
         </h3>
         <form id="login-form" action="/signin" style="outline: 1px solid green; width:250px; padding:20px">
-            <div style="width:70px; display: inline-block;">
+            <p style="width:70px; display: inline-block;">
                 ID:
-            </div>
+            </p>
             <input id="id" name="id"/>
             <br>
-            <br>
-            <div style="width:70px; display: inline-block;">
+            <p style="width:70px; display: inline-block;">
                 Password:
-            </div>
+            </p>
             <input id="password" name="password"/>
             <input type="submit" value="로그인"/>
         </form>
     </div>
-    <div style="width: 320px; height: 320px; display: inline-block; vertical-align:top;">
+    <div id="register-box" style="width: 320px; height: 320px; display: inline-block; vertical-align:top;">
         <h3>
             회원가입
         </h3>
-        <form id="form" action="/signup" style="outline: 1px solid green; width:250px; padding:20px">
-            <div style="width:70px; display: inline-block;">
+        <form id="register-form" action="/signup" style="outline: 1px solid green; width:250px; padding:20px">
+            <p style="width:70px; display: inline-block;">
                 ID:
-            </div>
+            </p>
             <input id="id" name="id"/>
             <br>
-            <br>
-            <div style="width:70px; display: inline-block;">
+            <p style="width:70px; display: inline-block;">
                 Password:
-            </div>
+            </p>
             <input id="password" name="password"/>
             <br>
+            <p style="width:70px; display: inline-block;">
+                이름:
+            </p>
+            <input id="name" name="name"/>
             <br>
-            이름: <input name="name"/>
+            <br>
+            <input id="register" type="submit" value="계정 생성"/>
+        </form>
+
+        <form id="stat-form" action="/stat"
+              style="outline: 1px solid green; width:250px; padding:20px; display: none">
+            <input id="id" name="id" style="display: none"/>
+            <input id="password" name="password" style="display: none"/>
             <input id="str" name="str" style="display: none"/>
             <input id="def" name="def" style="display: none"/>
             <input id="hp" name="hp" style="display: none"/>
-            <br>
+            <input id="final" name="final" value="true" style="display: none"/>
             <p>
                 공격력 <span id="starting-str">0</span>
             </p>
@@ -61,17 +70,18 @@
             <p>
                 체력 <span id="starting-hp">0</span>
             </p>
-
-            <button type="button" id="new-stat">
-                능력치 재선택 (5회 남음)
+            <button type="submit" id="new-stat" name="final" value="true" onClick="changeStatForm('false')"/>
+            능력치 재선택 (5회 남음)
             </button>
-            <input type="submit" value="계정 생성"/>
+            <button type="submit" id="confirm-stat" name="final" value="true" onClick="changeStatForm('true')"/>
+            확정하기
+            </button>
         </form>
     </div>
-
 </div>
 
 <script>
+  let accountMade = false // 계정 생성 후 능력치 선택 할 때, true가 됨.
   let restartChance = 5;
   let startingStat = {
     str: 4,
@@ -85,15 +95,8 @@
   $('input#def').val(startingStat.def)
   $('input#hp').val(startingStat.hp)
 
-  $('#new-stat').click(function () {
-    restartChance -= 1
-    $('#new-stat').html(`능력치 재선택 (${restartChance}회 남음)`)
-    if (restartChance <= 0) {
-      $('#new-stat').attr('disabled', true);
-    }
-    randomStart()
-  })
-  const randomStart = () => {
+  const randomizeStat = (chance) => {
+    $('#new-stat').html(`능력치 재선택 (${chance}회 남음)`)
     startingStat.str = 2 + Math.floor(Math.random() * 5);
     startingStat.def = 2 + Math.floor(Math.random() * 5);
     startingStat.hp = 8 + Math.floor(Math.random() * 5);
@@ -103,13 +106,52 @@
     $('input#str').val(startingStat.str)
     $('input#def').val(startingStat.def)
     $('input#hp').val(startingStat.hp)
+    if (chance <= 0) {
+      $('#new-stat').html(`능력치 재선택 불가`)
+      $('#new-stat').attr('disabled', true)
+    }
   }
 
   const key = localStorage.getItem('_key');
   if (key) {
     location.href = '/game';
   }
-  $('#form').submit(function (e) {
+  $('#register-form').submit(function (e) {
+    e.preventDefault();
+    const action = $(this).attr('action');
+    $.post(action, $(this).serialize(), (res) => {
+      if (res.success === true) {
+        $('#stat-form #id').val($('#register-form #id').val())
+        $('#stat-form #password').val($('#register-form #password').val())
+        disableRegister()
+      } else {
+        alert("에러가 발생했습니다. 다시 시도해주세요.");
+      }
+    });
+  });
+
+  const changeStatForm = (final) => {
+    $('#stat-form input#final').val(final)
+    if (final === 'true') {
+      $('#register-box').css('display', 'none');
+    }
+  }
+
+  $('#stat-form').submit(function (e) {
+    e.preventDefault();
+    const action = $(this).attr('action');
+    $.post(action, $(this).serialize(), (res) => {
+      console.log(res)
+      if (res.success === true) {
+        randomizeStat(res.chance)
+        alert("수정");
+      } else {
+        alert("에러가 발생했습니다. 다시 시도해주세요.");
+      }
+    });
+  });
+
+  $('#login-form').submit(function (e) {     // TODO
     e.preventDefault();
     const action = $(this).attr('action');
     $.post(action, $(this).serialize(), (res) => {
@@ -121,6 +163,12 @@
       }
     });
   });
+
+
+  const disableRegister = () => {
+    $('#register-form').css('display', 'none');
+    $('#stat-form').css('display', 'inline-block');
+  }
 </script>
 </body>
 </html>
