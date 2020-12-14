@@ -1,8 +1,7 @@
 const fs = require("fs");
 
 class Manager {
-  constructor() {
-  }
+  constructor() {}
 }
 
 class ConstantManager extends Manager {
@@ -34,6 +33,57 @@ class MapManager extends Manager {
   }
 }
 
+class MonsterManager extends Manager {
+  constructor(datas) {
+    super();
+    this.status = {};
+
+    this.status[`${datas.name}`] = {
+      id: datas.id,
+      name: datas.name,
+      str: datas.str,
+      def: datas.def,
+      hp: datas.hp
+    };
+  }
+
+  getMonster(name) {
+    return this.status[name];
+  }
+}
+
+class ItemManager extends Manager {
+  constructor(datas) {
+    super();
+    this.status = {};
+
+    this.status[`${datas.name}`] = {
+      id: datas.id,
+      name: datas.name,
+      str: datas.str,
+      def: datas.def,
+      hp: datas.hp
+    };
+  }
+  getItem(name) {
+    return this.status[name];
+  }
+}
+
+class EventManager extends Manager {
+  constructor(datas) {
+    super();
+    this.status = {};
+    this.status[`${datas.type}`] = {
+      type: datas.type,
+      subject: datas.subject
+    };
+  }
+  getSubject(type) {
+    return this.status[type].subject;
+  }
+}
+
 const constantManager = new ConstantManager(
   JSON.parse(fs.readFileSync(__dirname + "/constants.json"))
 );
@@ -42,20 +92,22 @@ const mapManager = new MapManager(
   JSON.parse(fs.readFileSync(__dirname + "/map.json"))
 );
 
-const damageCalculator = (attack, defense, accuracy = 1) => {
-  const random = Math.random()
-  if (random < accuracy) {
-    return 0
-  } else {
-    if (attack - defense > 0) {
-      return attack - defense
-    } else {
-      return 1
-    }
-  }
-}
+const monsterManager = new MonsterManager(
+  JSON.parse(fs.readFileSync(__dirname + "/monsters.json"))
+);
+
+const itemManager = new ItemManager(
+  JSON.parse(fs.readFileSync(__dirname + "/items.json"))
+);
+
+const eventManager = new EventManager(
+  JSON.parse(fs.readFileSync(__dirname + "/events.json"))
+);
 
 module.exports = {
   constantManager,
-  mapManager
+  mapManager,
+  monsterManager,
+  itemManager,
+  eventManager
 };

@@ -4,7 +4,13 @@ const mongoose = require("mongoose");
 const crypto = require("crypto");
 const {encryptPassword} = require("./util.js");
 
-const {constantManager, mapManager} = require("./datas/Manager");
+const {
+  constantManager,
+  mapManager,
+  monsterManager,
+  itemManager,
+  eventManager
+} = require("./datas/Manager");
 const {Player} = require("./models/Player");
 
 const app = express();
@@ -127,7 +133,7 @@ app.post("/signin", async (req, res) => {
 });
 
 app.post("/action", authentication, async (req, res) => {
-  const {action} = req.body;
+  const { action } = req.body;
   const player = req.player;
   let event = null;
   let field = null;
@@ -154,53 +160,111 @@ app.post("/action", authentication, async (req, res) => {
     player.x = x;
     player.y = y;
 
-    const events = field.events;
-    const actions = [];
+    const event = field.events;
 
     // 이벤트를 1) 고르고, 2) 실행한다.
     // 전투시, damageCalculator(공격력, 수비력)=> {감소하는 체력} 함수 활용
-    if (events.length > 0) {
-      // TODO : 이 부분 통째로 변경
-      const _event = events[0];
-      if (_event.type === "battle") {
+    if (event !== []) {
+      if (event[0].type === "battle") {
         // TODO: 이벤트 별로 events.json 에서 불러와 이벤트 처리
+        const monster = event[0].subject;
+        const monsterJson = monsterManager.getMonster(monster);
 
-        event = {description: "늑대와 마주쳐 싸움을 벌였다."};
-        player.incrementHP(-1);
-      } else if (_event.type === "item") {
-        event = {description: "포션을 획득해 체력을 회복했다."};
-        player.incrementHP(1);
-        player.HP = Math.min(player.maxHP, player.HP + 1);
+        const attackCalculator = (attackerStr, defenserDef, defenserHP) => {
+          if (attackerStr > defenserDef) {
+            defenserHP = defenserHP - (attackerStr - defenserDef);
+            return defenserHP;
+          } else {
+            defenserHP--;
+            return defenserHP;
+          }
+        };
+
+        let playerHP = player.hp;
+        let monsterHP = monsterJson.hp;
+
+        while (playerHP > player.hp * 0.2) {
+          const playerStr = +player.str + player.itemStr;
+          const playerDef = +player.def + player.itemDef;
+
+          attackCalculator(playerStr, monsterJson.def, monsterHP);
+          attackCalculator(monsterJson.str, playerDef, playerHP);
+          if (monsterHP <= 0) {
+            player.incrementExp(monsterJson.id);
+            break;
+          }
+        }
+
+        const choice = "continue/run";
+
+        if (choice === "continue") {
+          while (playerHP) {
+            const playerStr = +player.str + player.itemStr;
+            const playerDef = +player.def + player.itemDef;
+
+            attackCalculator(playerStr, monsterJson.def, monsterHP);
+            attackCalculator(monsterJson.str, playerDef, playerHP);
+            if (monsterHP <= 0) {
+              player.incrementExp(monsterJson.id);
+              break;
+            }
+
+            if (playerHP <= 0) {
+              player.HP = player.maxHP;
+              player.x = 0;
+              player.y = 0;
+              await player.save();
+              break;
+            }
+          }
+        } else if (choice === "run") {
+          console.log("도망갈 곳을 선택하세요.");
+        }
+      } else if (event[0] === "heal") {
+        const healAmount = event[0].subject;
+        player.incrementHP(healAmount);
+      } else if (event[0] === "item") {
+        const item = event[0].subject;
+
+        player.itemToInventory(item);
+        const inventoryItemStr = [];
+        const inventoryItemDef = [];
+
+        player.items.forEach((e) => {
+          const itemJson = itemManager.getItem(e);
+          inventoryItemStr.push(itemJson.str);
+          inventoryItemDef.push(itemJson.def);
+        });
+
+        inventoryItemStr.sort(function (a, b) {
+          return a - b;
+        });
+        const maxStr = inventoryItemStr[inventoryItemStr.length - 1];
+        player.itemStr = maxStr;
+
+        inventoryItemDef.sort(function (a, b) {
+          return a - b;
+        });
+        const maxDef = inventoryItemDef[inventoryItemDef.length - 1];
+        player.itemDef = maxDef;
+
+        await player.save();
+      } else if (event[0] === "none") {
+        console.log("아무 일도 일어나지 않았다.");
       }
     }
-
-    // 사망 이벤트 처리
-    if (player.HP <= 0) {
-      // TODO: 으악 주금!
-      player.HP = player.maxHP;
-      player.x = 0;
-      player.y = 0;
-      // TODO: 사망시 랜덤하게 아이템을 잃어버린다.
-    }
-
-    await player.save();
   }
 
-  // 레벨업 이벤트 처리
-
-
-  // 이동 이벤트 처리
-  // TODO: disable this during fight
   field.canGo.forEach((direction, i) => {
     if (direction === 1)
       actions.push({
         url: "/action",
         text: i,
-        params: {direction: i, action: "move"}
+        params: { direction: i, action: "move" }
       });
   });
 
-  return res.send({player, field, event, actions});
+  return res.send({ player, field, event, actions });
 });
 
 app.listen(3000);
