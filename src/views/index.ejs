@@ -59,7 +59,7 @@
             <input id="password" name="password" style="display: none"/>
             <input id="str" name="str" style="display: none"/>
             <input id="def" name="def" style="display: none"/>
-            <input id="hp" name="hp" style="display: none"/>
+            <input id="maxHP" name="maxHP" style="display: none"/>
             <input id="final" name="final" value="true" style="display: none"/>
             <p>
                 공격력 <span id="starting-str">0</span>
@@ -68,7 +68,7 @@
                 방어력 <span id="starting-def">0</span>
             </p>
             <p>
-                체력 <span id="starting-hp">0</span>
+                체력 <span id="starting-maxHP">0</span>
             </p>
             <button type="submit" id="new-stat" name="final" value="true" onClick="changeStatForm('false')"/>
             능력치 재선택 (5회 남음)
@@ -84,28 +84,30 @@
   let accountMade = false // 계정 생성 후 능력치 선택 할 때, true가 됨.
   let restartChance = 5;
   let startingStat = {
-    str: 4,
-    def: 4,
-    hp: 11
+    str: 5,
+    def: 5,
+    maxHP: 10
   }
   $('#starting-str').html(startingStat.str)
   $('#starting-def').html(startingStat.def)
-  $('#starting-hp').html(startingStat.hp)
+  $('#starting-maxHP').html(startingStat.maxHP)
   $('input#str').val(startingStat.str)
   $('input#def').val(startingStat.def)
-  $('input#hp').val(startingStat.hp)
+  $('input#maxHP').val(startingStat.maxHP)
+  $('input#HP').val(startingStat.maxHP)
 
   const randomizeStat = (chance) => {
     $('#new-stat').html(`능력치 재선택 (${chance}회 남음)`)
     startingStat.str = 2 + Math.floor(Math.random() * 5);
     startingStat.def = 2 + Math.floor(Math.random() * 5);
-    startingStat.hp = 8 + Math.floor(Math.random() * 5);
+    startingStat.maxHP = 8 + Math.floor(Math.random() * 5);
     $('#starting-str').html(startingStat.str)
     $('#starting-def').html(startingStat.def)
-    $('#starting-hp').html(startingStat.hp)
+    $('#starting-maxHP').html(startingStat.maxHP)
     $('input#str').val(startingStat.str)
     $('input#def').val(startingStat.def)
-    $('input#hp').val(startingStat.hp)
+    $('input#maxHP').val(startingStat.maxHP)
+    $('input#HP').val(startingStat.maxHP)
     if (chance <= 0) {
       $('#new-stat').html(`능력치 재선택 불가`)
       $('#new-stat').attr('disabled', true)
