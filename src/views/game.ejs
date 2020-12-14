@@ -7,10 +7,8 @@
 </head>
 
 <body>
-<div id="position"></div>
-
-<div id="status">
-    HP: <span id="HP"> 5 / 5</span>
+<div>
+    현재 위치: <span id="position"> x: 0, y: 0</span>
 </div>
 <div id="game"></div>
 <div id="event_result"></div>
@@ -20,7 +18,25 @@
     <button value="2">남</button>
     <button value="0">북</button>
 </div>
-<div id="character-stat"></div>
+<div id="status" style="outline: 1px solid green; width:250px; padding:20px;margin-top: 20px">
+    이름: <span id="hp"> 5 / 5</span> <br>
+    체력: <span id="hp"> 5 / 5</span> <br>
+    공격력: <span id="str"> 5 (+3)</span> <br>
+    DEF: <span id="def"> 5 (+3)</span> <br>
+    Level: <span id="level"> 5 </span> <br>
+    exp: <span id="exp"> 5 / 10</span> <br>
+    <div>
+        <!--TODO: 내 아이템??        -->
+    </div>
+</div>
+
+<div id="tip" style=" width:300px; padding:20px;margin-top: 20px">
+    미로의 던전에 오신 것을 환영합니다.
+    0,0에서 11,11까지 121칸의 맵을 돌아다니며,
+    몬스터를 만나고 아이템을 획득하며 점점 강해지십시오.
+    과연, 중심부까지 가실 수 있을까요?
+</div>
+
 
 <script>
 
@@ -36,7 +52,7 @@
       const {player, field, event, actions} = req;
 
       $('#game').text(field.description);
-      $('#position').text(`(${field.x},${field.y})`);
+      $('#position').text(`x: ${field.x}, y: ${field.y}`);
       const x = field.x;
       const y = field.y;
 

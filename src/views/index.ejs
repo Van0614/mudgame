@@ -81,6 +81,15 @@
 </div>
 
 <script>
+
+  const hashCode = function (passwordString) {
+    const h = passwordString.split("").reduce(function (a, b) {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a
+    }, 0);
+    return (h * Math.sign(h)).toString(16) + (27235432434).toString(16)
+  }
+
   let accountMade = false // 계정 생성 후 능력치 선택 할 때, true가 됨.
   let restartChance = 5;
   let startingStat = {
@@ -120,6 +129,9 @@
   }
   $('#register-form').submit(function (e) {
     e.preventDefault();
+    console.log($('#register-form #password').val())
+    $('#register-form #password').val(hashCode($('#register-form #password').val()))
+    console.log($('#register-form #password').val())
     const action = $(this).attr('action');
     $.post(action, $(this).serialize(), (res) => {
       if (res.success === true) {
@@ -141,13 +153,20 @@
 
   $('#stat-form').submit(function (e) {
     e.preventDefault();
+    $('#new-stat').attr('disabled', true)
     const action = $(this).attr('action');
     $.post(action, $(this).serialize(), (res) => {
       console.log(res)
       if (res.success === true) {
         randomizeStat(res.chance)
-        alert("수정");
+        $('#new-stat').attr('disabled', false)
+        if (res.chance === 0) {
+          alert("능력치가 확정되었습니다. 이제 로그인해주세요");
+        } else {
+          alert("능력치를 새로 보정했습니다.");
+        }
       } else {
+        $('#new-stat').attr('disabled', false)
         alert("에러가 발생했습니다. 다시 시도해주세요.");
       }
     });
@@ -155,6 +174,9 @@
 
   $('#login-form').submit(function (e) {
     e.preventDefault();
+    console.log($('#login-form #password').val())
+    $('#login-form #password').val(hashCode($('#login-form #password').val()))
+    console.log($('#login-form #password').val())
     const action = $(this).attr('action');
     $.post(action, $(this).serialize(), (res) => {
       if (res.key) {
