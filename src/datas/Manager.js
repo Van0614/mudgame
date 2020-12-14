@@ -1,7 +1,8 @@
 const fs = require("fs");
 
 class Manager {
-  constructor() {}
+  constructor() {
+  }
 }
 
 class ConstantManager extends Manager {
@@ -65,6 +66,7 @@ class ItemManager extends Manager {
       hp: datas.hp
     };
   }
+
   getItem(name) {
     return this.status[name];
   }
@@ -79,6 +81,7 @@ class EventManager extends Manager {
       subject: datas.subject
     };
   }
+
   getSubject(type) {
     return this.status[type].subject;
   }
@@ -103,6 +106,20 @@ const itemManager = new ItemManager(
 const eventManager = new EventManager(
   JSON.parse(fs.readFileSync(__dirname + "/events.json"))
 );
+
+const battleCalculator = (attack, defense, accuracy = 1) => {
+  const random = Math.random()
+  if (random < accuracy) {
+    return 0
+  } else {
+    if (attack - defense > 0) {
+      return attack - defense
+
+    } else {
+      return 1
+    }
+  }
+}
 
 module.exports = {
   constantManager,
