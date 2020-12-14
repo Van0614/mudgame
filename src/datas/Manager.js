@@ -42,11 +42,16 @@ const mapManager = new MapManager(
   JSON.parse(fs.readFileSync(__dirname + "/map.json"))
 );
 
-const damageCalculator = (attack, defense) => {
-  if (attack - defense > 0) {
-    return attack - defense
+const damageCalculator = (attack, defense, accuracy = 1) => {
+  const random = Math.random()
+  if (random < accuracy) {
+    return 0
   } else {
-    return 1
+    if (attack - defense > 0) {
+      return attack - defense
+    } else {
+      return 1
+    }
   }
 }
 

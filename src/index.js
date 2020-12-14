@@ -2,28 +2,28 @@ const express = require("express");
 const fs = require("fs");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
-const { encryptPassword } = require("./util.js");
+const {encryptPassword} = require("./util.js");
 
-const { constantManager, mapManager } = require("./datas/Manager");
-const { Player } = require("./models/Player");
+const {constantManager, mapManager} = require("./datas/Manager");
+const {Player} = require("./models/Player");
 
 const app = express();
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended: true}));
 app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
 app.engine("html", require("ejs").renderFile);
 
 mongoose.connect(
   "mongodb+srv://vanessa:actjhj614^^@cluster0.gtu8i.mongodb.net/games?retryWrites=true&w=majority",
-  { useNewUrlParser: true, useUnifiedTopology: true }
+  {useNewUrlParser: true, useUnifiedTopology: true}
 );
 
 const authentication = async (req, res, next) => {
-  const { authorization } = req.headers;
+  const {authorization} = req.headers;
   if (!authorization) return res.sendStatus(401);
   const [bearer, key] = authorization.split(" ");
   if (bearer !== "Bearer") return res.sendStatus(401);
-  const player = await Player.findOne({ key });
+  const player = await Player.findOne({key});
   if (!player) return res.sendStatus(401);
 
   req.player = player;
@@ -31,7 +31,7 @@ const authentication = async (req, res, next) => {
 };
 
 app.get("/", (req, res) => {
-  res.render("index", { gameName: constantManager.gameName });
+  res.render("index", {gameName: constantManager.gameName});
 });
 
 app.get("/game", (req, res) => {
@@ -39,14 +39,14 @@ app.get("/game", (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
-  const { id, password, name } = req.body;
+  const {id, password, name} = req.body;
   const encryptedPassword = encryptPassword(password);
 
-  if (await Player.exists({ id })) {
+  if (await Player.exists({id})) {
     // 새롭게 계정을 만드는 경우.
     return res
       .status(400)
-      .send({ error: "Player with same id already exists" });
+      .send({error: "Player with same id already exists"});
   } else {
     const player = new Player({
       id,
@@ -63,6 +63,7 @@ app.post("/signup", async (req, res) => {
       items: [],
       exp: 0,
       level: 1,
+      randomPlayerKey: Math.random(),
       statChangeChance: 5
     });
     await player.save();
@@ -75,7 +76,7 @@ app.post("/signup", async (req, res) => {
 
 app.post("/stat", async (req, res) => {
   // Change starting stat, deduct change by 1
-  const { id, password, str, def, maxHP, final } = req.body;
+  const {id, password, str, def, hp, final} = req.body;
   const player = await Player.findOne({
     id,
     password: encryptPassword(password)
@@ -83,8 +84,8 @@ app.post("/stat", async (req, res) => {
   if (player.statChangeChance > 0 || final === "true") {
     player.str = str;
     player.def = def;
-    player.MaxHp = MaxHP;
-    player.Hp = MaxHP;
+    player.MaxHp = hp;
+    player.Hp = hp;
     player.statChangeChance -= 1;
     if (final === true || final === "true") {
       player.statChangeChance = 0;
@@ -96,18 +97,18 @@ app.post("/stat", async (req, res) => {
       chance: player.statChangeChance,
       str: str,
       def: def,
-      MaxHP: MaxHP
+      MaxHP: hp
     });
   } else {
     return res
       .status(400)
-      .send({ error: "Chance all used up. Cannot change stat" });
+      .send({error: "Chance all used up. Cannot change stat"});
   }
 });
 
 app.post("/signin", async (req, res) => {
-  const { id, password } = req.body;
-  if (await Player.exists({ id, password: encryptPassword(password) })) {
+  const {id, password} = req.body;
+  if (await Player.exists({id, password: encryptPassword(password)})) {
     // TODO: auth 체크
     const key = crypto.randomBytes(24).toString("hex");
     const player = await Player.findOne({
@@ -115,17 +116,18 @@ app.post("/signin", async (req, res) => {
       password: encryptPassword(password)
     });
     player.key = key;
+    player.randomPlayerKey = Math.random();
     await player.save();
-    return res.send({ key });
+    return res.send({key});
   } else {
     return res
       .status(400)
-      .send({ error: "No such player. Wrong id or password" });
+      .send({error: "No such player. Wrong id or password"});
   }
 });
 
 app.post("/action", authentication, async (req, res) => {
-  const { action } = req.body;
+  const {action} = req.body;
   const player = req.player;
   let event = null;
   let field = null;
@@ -163,10 +165,10 @@ app.post("/action", authentication, async (req, res) => {
       if (_event.type === "battle") {
         // TODO: 이벤트 별로 events.json 에서 불러와 이벤트 처리
 
-        event = { description: "늑대와 마주쳐 싸움을 벌였다." };
+        event = {description: "늑대와 마주쳐 싸움을 벌였다."};
         player.incrementHP(-1);
       } else if (_event.type === "item") {
-        event = { description: "포션을 획득해 체력을 회복했다." };
+        event = {description: "포션을 획득해 체력을 회복했다."};
         player.incrementHP(1);
         player.HP = Math.min(player.maxHP, player.HP + 1);
       }
@@ -184,16 +186,22 @@ app.post("/action", authentication, async (req, res) => {
     await player.save();
   }
 
+  // 레벨업 이벤트 처리
+
+
+  // 이동 이벤트 처리
+  // TODO: disable this during fight
   field.canGo.forEach((direction, i) => {
     if (direction === 1)
       actions.push({
         url: "/action",
         text: i,
-        params: { direction: i, action: "move" }
+        params: {direction: i, action: "move"}
       });
   });
 
-  return res.send({ player, field, event, actions });
+  return res.send({player, field, event, actions});
 });
 
 app.listen(3000);
+
