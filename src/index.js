@@ -134,7 +134,7 @@ app.post("/signin", async (req, res) => {
 });
 
 app.post("/action", authentication, async (req, res) => {
-  const { action } = req.body;
+  const {action} = req.body;
   const player = req.player;
   let event = null;
   let field = null;
@@ -162,6 +162,7 @@ app.post("/action", authentication, async (req, res) => {
     player.y = y;
 
     // TODO: 만약 이미 전투중인 경우 이 함수를 실행하지 않고 전투를 진행한다!
+
     const eventJson = eventChooser(player.x, player.y, player.randomPlayerKey);
 
     if (eventJson) {
@@ -271,11 +272,16 @@ app.post("/action", authentication, async (req, res) => {
       actions.push({
         url: "/action",
         text: i,
-        params: { direction: i, action: "move" }
+        params: {direction: i, action: "move"}
       });
   });
+  event.monster = {
+    name:'해골',
+    hp:3,
+    maxHp:7
+  }
 
-  return res.send({ player, field, event, actions });
+  return res.send({player, field, event, actions});
 });
 
 app.listen(3000);

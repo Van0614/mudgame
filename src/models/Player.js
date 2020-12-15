@@ -10,20 +10,22 @@ const playerSchema = new Schema({
   level: Number,
   exp: Number,
 
-  maxHP: { type: Number, default: 10 },
-  HP: { type: Number, default: 10 },
-  str: { type: Number, default: 5 },
-  def: { type: Number, default: 5 },
-  itemStr: { type: Number, default: 0 }, // TODO: 아이템 능력치를 여기에 추가
-  itemDef: { type: Number, default: 0 }, // TODO: 아이템 능력치를 여기에 추가
-  x: { type: Number, default: 0 },
-  y: { type: Number, default: 0 },
-  items: { type: Array, default: [] }, // TODO: 아이템들을 여기에 추가
-  exp: { type: Number, default: 0 },
-  maxExp: { type: Number, default: 10 },
-  level: { type: Number, default: 1 },
+  maxHP: {type: Number, default: 10},
+  HP: {type: Number, default: 10},
+  str: {type: Number, default: 5},
+  def: {type: Number, default: 5},
+  itemStr: {type: Number, default: 0}, // TODO: 아이템 능력치를 여기에 추가
+  itemDef: {type: Number, default: 0}, // TODO: 아이템 능력치를 여기에 추가
+  x: {type: Number, default: 0},
+  y: {type: Number, default: 0},
+  items: {type: Array, default: []}, // TODO: 아이템들을 여기에 추가
+  exp: {type: Number, default: 0},
+  maxExp: {type: Number, default: 10},
+  level: {type: Number, default: 1},
 
-  statChangeChance: { type: Number, default: 1 }
+  statChangeChance: {type: Number, default: 1},
+
+  randomPlayerKey: {type: Number, default: 0.6279733963460027},
 });
 
 playerSchema.methods.incrementHP = function (val) {
