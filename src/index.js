@@ -230,6 +230,7 @@ app.post("/action", authentication, async (req, res) => {
       } else if (eventJson.event === "heal") {
         const healAmount = eventJson.healAmount;
         player.incrementHP(healAmount);
+        await player.save();
       } else if (eventJson.event === "item") {
         const item = eventJson.itemName;
 
@@ -290,8 +291,6 @@ app.post("/action", authentication, async (req, res) => {
           };
 
           monsterHP = attackCalculator(playerStr, monsterJson.def, monsterHP);
-          player.HP = attackCalculator(monsterJson.str, playerDef, playerHP);
-          await player.save();
           if (monsterHP <= 0) {
             player.incrementExp(monsterJson.id);
             eventJson.event = "win";
@@ -299,6 +298,10 @@ app.post("/action", authentication, async (req, res) => {
             await player.save();
             break;
           }
+
+          player.HP = attackCalculator(monsterJson.str, playerDef, playerHP);
+          await player.save();
+          playerHP = player.HP;
 
           if (playerHP <= 0) {
             eventJson.event = "die";
