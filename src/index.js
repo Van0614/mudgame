@@ -133,7 +133,7 @@ app.post("/signin", async (req, res) => {
 });
 
 app.post("/action", authentication, async (req, res) => {
-  const { action } = req.body;
+  const {action} = req.body;
   const player = req.player;
   let event = null;
   let field = null;
@@ -160,7 +160,9 @@ app.post("/action", authentication, async (req, res) => {
     player.x = x;
     player.y = y;
 
-    const eventChooser = (x, y, randomKey) => {  // Todo: randomkey는 Math.random()의 결과물, 받아오기
+    // TODO: 만약 이미 전투중인 경우 이 함수를 실행하지 않고 전투를 진행한다!
+    eventChooser(player.x, player.y, player.randomKey);
+    const eventChooser = (x, y, randomKey) => {  // Todo: randomkey는 player.randomKey
       // TODO: 맵은 0~10으로 가정하고, 5,5에 가까워질수록 강한 보상과 맵이 나온다.
       const messages = [ // 가장자리부터 중심부까지 순서대로 메세지 출력
         '평화롭다.',
@@ -173,35 +175,33 @@ app.post("/action", authentication, async (req, res) => {
       const playerSeed = randomKey.toString().slice(2)
       const placeSeed = parseInt(playerSeed[((11 * x) + y) % 16]) // 0~9 사이의 숫자
       const distanceFromCenter = Math.max((5 - x) * Math.sign(5 - x), (5 - y) * Math.sign(5 - y))
-    
+
       let response = {
-        event: 'none', // none 70, battle 10, item 10, heal 10
+        event: 'none', // none 70%, battle 10%, item 10%, heal 10%
         message: '',
         // TODO: 여기에 소환된 몬스터의 능력치나, 얻은 아이템의 능력치, 회복량 등을 잘 담으면 된다. 자료 형식이 결정되면 다른 조원들이게 알려주자
       }
       if (placeSeed < 7) {
         response.event = 'none'
         response.message = messages[5 - distanceFromCenter]
-    
+
       } else if (placeSeed < 8) {
         response.event = 'battle'
         response.message = '몬스터가 싸움을 걸어왔다'
         // TODO 시간이 된다면, 소환된 몬스터의 강도를 (5 - distanceFromCenter )에 따라 높일 수 있다.
-    
+
       } else if (placeSeed < 9) {
         response.event = 'item'
         // 얻은 아이템의 능력치를 (5 - distanceFromCenter )에 따라 높일 수 있다.
-    
+
       } else {
         response.event = 'heal'
-        response.message = messages[5 - distanceFromCenter] + ' ' + '누군가 음식을 두고 갔다.'
+        response.message = messages[5 - distanceFromCenter] + ' 누군가 음식을 두고 갔다.'
         // 회복량은 5 - distanceFromCenter에 비례하면 좋다.
       }
-    
+
       return response
     }
-
-    eventChooser(player.x, player.y, randomKey); //Todo: 로그인시 random 키 발급하는 내용 추가 필요
 
     const event = field.events;
 
@@ -303,11 +303,11 @@ app.post("/action", authentication, async (req, res) => {
       actions.push({
         url: "/action",
         text: i,
-        params: { direction: i, action: "move" }
+        params: {direction: i, action: "move"}
       });
   });
 
-  return res.send({ player, field, event, actions });
+  return res.send({player, field, event, actions});
 });
 
 app.listen(3000);

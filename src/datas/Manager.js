@@ -114,7 +114,6 @@ const battleCalculator = (attack, defense, accuracy = 1) => {
   } else {
     if (attack - defense > 0) {
       return attack - defense
-
     } else {
       return 1
     }
