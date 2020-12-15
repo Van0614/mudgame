@@ -136,23 +136,28 @@ const eventChooser = (x, y, randomKey) => {
     healAmount: 0
     // TODO: 여기에 소환된 몬스터의 능력치나, 얻은 아이템의 능력치, 회복량 등을 잘 담으면 된다. 자료 형식이 결정되면 다른 조원들이게 알려주자
   };
-  if (placeSeed < 5) {
-    response.event = "none";
-    response.message = messages[5 - distanceFromCenter];
-  } else if (placeSeed < 8) {
+  if (distanceFromCenter === 0) {
     response.event = "battle";
-    response.monsterName = distanceMonster[+5 - distanceFromCenter].name;
-    response.message = response.monsterName + "가 싸움을 걸어왔다";
-  } else if (placeSeed < 9) {
-    response.event = "item";
-    response.itemName = distanceItems[5 - distanceFromCenter].name;
+    response.monsterName = distanceMonster[5].name;
+    response.message = response.monsterName + "(이)가 싸움을 걸어왔다"
   } else {
-    response.event = "heal";
-    response.message =
-      messages[5 - distanceFromCenter] + " 누군가 음식을 두고 갔다.";
-    response.healAmount = 7 - distanceFromCenter;
+    if (placeSeed < 5) {
+      response.event = "none";
+     response.message = messages[5 - distanceFromCenter];
+    } else if (placeSeed < 8) {
+      response.event = "battle";
+      response.monsterName = distanceMonster[+5 - distanceFromCenter].name;
+      response.message = messages[5 - distanceFromCenter] + "\n" + response.monsterName + "가 싸움을 걸어왔다";
+    } else if (placeSeed < 9) {
+      response.event = "item";
+      response.itemName = distanceItems[5 - distanceFromCenter].name;
+    } else {
+      response.event = "heal";
+      response.message =
+        messages[5 - distanceFromCenter] + "\n" + "누군가 음식을 두고 갔다.";
+      response.healAmount = 7 - distanceFromCenter;
+   }
   }
-
   return response;
 };
 
