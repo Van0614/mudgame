@@ -2,7 +2,7 @@ const express = require("express");
 const fs = require("fs");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
-const { encryptPassword } = require("./util.js");
+const {encryptPassword} = require("./util.js");
 
 const {
   constantManager,
@@ -11,25 +11,25 @@ const {
   itemManager,
   eventChooser
 } = require("./datas/Manager");
-const { Player } = require("./models/Player");
+const {Player} = require("./models/Player");
 
 const app = express();
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended: true}));
 app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
 app.engine("html", require("ejs").renderFile);
 
 mongoose.connect(
   "mongodb+srv://vanessa:actjhj614^^@cluster0.gtu8i.mongodb.net/games?retryWrites=true&w=majority",
-  { useNewUrlParser: true, useUnifiedTopology: true }
+  {useNewUrlParser: true, useUnifiedTopology: true}
 );
 
 const authentication = async (req, res, next) => {
-  const { authorization } = req.headers;
+  const {authorization} = req.headers;
   if (!authorization) return res.sendStatus(401);
   const [bearer, key] = authorization.split(" ");
   if (bearer !== "Bearer") return res.sendStatus(401);
-  const player = await Player.findOne({ key });
+  const player = await Player.findOne({key});
   if (!player) return res.sendStatus(401);
 
   req.player = player;
@@ -37,7 +37,7 @@ const authentication = async (req, res, next) => {
 };
 
 app.get("/", (req, res) => {
-  res.render("index", { gameName: constantManager.gameName });
+  res.render("index", {gameName: constantManager.gameName});
 });
 
 app.get("/game", (req, res) => {
@@ -45,14 +45,14 @@ app.get("/game", (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
-  const { id, password, name } = req.body;
+  const {id, password, name} = req.body;
   const encryptedPassword = encryptPassword(password);
 
-  if (await Player.exists({ id })) {
+  if (await Player.exists({id})) {
     // 새롭게 계정을 만드는 경우.
     return res
       .status(400)
-      .send({ error: "Player with same id already exists" });
+      .send({error: "Player with same id already exists"});
   } else {
     const player = new Player({
       id,
@@ -82,7 +82,7 @@ app.post("/signup", async (req, res) => {
 
 app.post("/stat", async (req, res) => {
   // Change starting stat, deduct change by 1
-  const { id, password, str, def, hp, final } = req.body;
+  const {id, password, str, def, maxHP, final} = req.body;
   const player = await Player.findOne({
     id,
     password: encryptPassword(password)
@@ -108,13 +108,13 @@ app.post("/stat", async (req, res) => {
   } else {
     return res
       .status(400)
-      .send({ error: "Chance all used up. Cannot change stat" });
+      .send({error: "Chance all used up. Cannot change stat"});
   }
 });
 
 app.post("/signin", async (req, res) => {
-  const { id, password } = req.body;
-  if (await Player.exists({ id, password: encryptPassword(password) })) {
+  const {id, password} = req.body;
+  if (await Player.exists({id, password: encryptPassword(password)})) {
     // TODO: auth 체크
     const key = crypto.randomBytes(24).toString("hex");
     const player = await Player.findOne({
@@ -124,16 +124,16 @@ app.post("/signin", async (req, res) => {
     player.key = key;
     player.randomPlayerKey = Math.random();
     await player.save();
-    return res.send({ key });
+    return res.send({key});
   } else {
     return res
       .status(400)
-      .send({ error: "No such player. Wrong id or password" });
+      .send({error: "No such player. Wrong id or password"});
   }
 });
 
 app.post("/action", authentication, async (req, res) => {
-  const { action } = req.body;
+  const {action} = req.body;
   const player = req.player;
   console.log(player);
   console.log(req.body);
@@ -223,8 +223,8 @@ app.post("/action", authentication, async (req, res) => {
           };
 
           const fightArray = [
-            { text: "계속 싸운다", continue: "true" },
-            { text: "도망간다", continue: "false" }
+            {text: "계속 싸운다", continue: "true"},
+            {text: "도망간다", continue: "false"}
           ];
           fightArray.forEach((e) => {
             const monsterRemainHP = monsterHP;
@@ -318,6 +318,12 @@ app.post("/action", authentication, async (req, res) => {
             const randomItem = Math.round(Math.random() * 4);
             player.items.splice(randomItem, 1);
             await player.save();
+            console.log("사망했습니다.");
+            actions.push({
+              url: "/action",
+              text: "부활",
+              params: {action: "query"}
+            });
             break;
           }
         }
@@ -339,14 +345,16 @@ app.post("/action", authentication, async (req, res) => {
   }
 
   console.log(eventJson);
-  if (eventJson.event !== "battle") {
+  if (eventJson.event !== "battle" && eventJson.event !== "die") {
+    actions = [];
+    const directions = ['남', '동', '북', '서']
     field.canGo.forEach((direction, i) => {
       // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
       if (direction === 1)
         actions.push({
           url: "/action",
-          text: i,
-          params: { direction: i, action: "move" }
+          text: directions[i],
+          params: {direction: i, action: "move"}
         });
     });
   }
@@ -355,7 +363,7 @@ app.post("/action", authentication, async (req, res) => {
   }
   field.description = eventJson.message;
   // TODO: event.description 에 여러가지 메세지를 담기. 아니면 배열에 메세지를 여러개 담아도 좋다.
-  return res.send({ player, field, event, actions });
+  return res.send({player, field, event, actions});
 });
 
 app.listen(3000);

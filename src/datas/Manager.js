@@ -138,6 +138,7 @@ const eventChooser = (x, y, randomKey) => {
   };
   if (distanceFromCenter === 0) {
     response.event = "battle";
+<<<<<<< HEAD
     response.monsterName = distanceMonster[5].name;
     response.message = response.monsterName + "(이)가 싸움을 걸어왔다"
   } else {
@@ -157,6 +158,20 @@ const eventChooser = (x, y, randomKey) => {
         messages[5 - distanceFromCenter] + "\n" + "누군가 음식을 두고 갔다.";
       response.healAmount = 7 - distanceFromCenter;
    }
+=======
+    response.monsterName = distanceMonster[+5 - distanceFromCenter].name;
+    response.message = messages[5 - distanceFromCenter] + '\n  '
+    response.monsterName + "가 싸움을 걸어왔다";
+  } else if (placeSeed < 9) {
+    response.event = "item";
+    response.itemName = distanceItems[5 - distanceFromCenter].name;
+    response.message = messages[5 - distanceFromCenter] + ` 상자 속에서 ${response.itemName}을 얻었다!`;
+  } else {
+    response.event = "heal";
+    response.message =
+      messages[5 - distanceFromCenter] + "\n 누군가 음식을 두고 갔다.";
+    response.healAmount = 7 - distanceFromCenter;
+>>>>>>> 64651581fe94aedc847065c888cecb37da161c1a
   }
   return response;
 };

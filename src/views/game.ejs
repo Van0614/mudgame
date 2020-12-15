@@ -18,9 +18,11 @@
     <button value="2">남</button>
     <button value="0">북</button>
 </div>
-<div id="status" style="outline: 1px solid green; width:250px; padding:20px;margin-top: 20px">
+<div id="status"
+     style="outline: 1px solid green; height:170px; width:250px; padding:20px;margin-top: 20px;display: inline-block; vertical-align:top;"
+>
     이름: <span id="name"> 5 / 5</span> <br>
-    체력: <span id="maxHP"> 5 / 5</span> <br>
+    체력: <span id="hp"> 5 / 5</span> <br>
     공격력: <span id="str"> 5 (+3)</span> <br>
     DEF: <span id="def"> 5 (+3)</span> <br>
     Level: <span id="level"> 5 </span> <br>
@@ -29,13 +31,19 @@
         <!--TODO: 내 아이템??        -->
     </div>
 </div>
+<div id="item-list"
+     style="outline: 1px solid green;height:170px; width:250px; padding:20px;margin-top: 20px;display: inline-block; vertical-align:top;"
+>
+    &lt; 내 아이템들 &gt;
+    <div id="items" style="margin-top: 10px"></div>
+</div>
 
 <div id="tip" style=" width:550px; padding:20px;margin-top: 20px">
     <h4>
         Tip
     </h4>
     미로의 던전에 오신 것을 환영합니다. <br>
-    0,0에서 11,11까지 121칸의 맵을 돌아다니며, <br>
+    0,0에서 10,10까지 121칸의 맵을 돌아다니며, <br>
     몬스터를 만나고 아이템을 획득하며 점점 강해지십시오. <br>
     과연, 중심부까지 가실 수 있을까요? <br>
 </div>
@@ -51,8 +59,9 @@
       },
       method: "POST",
       data: $.param(params),
-    }).done((req) => {
-      const {player, field, event, actions} = req;
+    }).done((res) => {
+      const {player, field, event, actions} = res;
+      console.log(player)
 
       $('#game').text(field.description);
       $('#position').text(`x: ${field.x}, y: ${field.y}`);
@@ -60,9 +69,10 @@
       const y = field.y;
 
       $('#control').html('');
-      req.actions.forEach((action) => {
-        const dom = $('<button></button');
+      actions.forEach((action) => {
+        const dom = $('<button></button>');
         dom.text(action.text);
+        dom.addClass('action');
         dom.bind('click', function () {
           sendAction(action.url, action.params);
         });
@@ -76,7 +86,26 @@
         $('#event_result').text("이동하자.");
       }
 
-      $('#HP').text(`${player.HP} / ${player.maxHP}`)
+      $('#name').text(player.name)
+      $('#hp').text(`${player.HP} / ${player.maxHP}`)
+      $('#str').text(`${player.str} (+${player.itemStr})`)
+      $('#def').text(`${player.def} (+${player.itemDef})`)
+      $('#level').text(player.level)
+      $('#exp').text(`${player.exp} / ${player.maxExp}`)
+      $('#items').html('');
+      let playerItems = {}
+      player.items.forEach((item) => {
+        if (playerItems[item] === undefined) {
+          playerItems[item] = 1
+        } else {
+          playerItems[item] += 1
+        }
+      });
+      Object.keys(playerItems).forEach((item) => {
+        const dom = $('<div></div>');
+        dom.text(` - ${item} (${playerItems[item]}개)`);
+        $('#items').append(dom);
+      })
     });
 
   }
