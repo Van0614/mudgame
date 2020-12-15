@@ -9,7 +9,8 @@ const {
   mapManager,
   monsterManager,
   itemManager,
-  eventManager
+  eventManager,
+  eventChooser
 } = require("./datas/Manager");
 const {Player} = require("./models/Player");
 
@@ -160,14 +161,16 @@ app.post("/action", authentication, async (req, res) => {
     player.x = x;
     player.y = y;
 
-    const event = field.events;
+    // TODO: 만약 이미 전투중인 경우 이 함수를 실행하지 않고 전투를 진행한다!
+    const eventJson = eventChooser(player.x, player.y, player.randomPlayerKey);
 
-    // 이벤트를 1) 고르고, 2) 실행한다.
-    // 전투시, damageCalculator(공격력, 수비력)=> {감소하는 체력} 함수 활용
-    if (event !== []) {
-      if (event[0].type === "battle") {
+    if (eventJson) {
+      console.log(eventJson.message);
+
+      if (eventJson.event === "battle") {
         // TODO: 이벤트 별로 events.json 에서 불러와 이벤트 처리
-        const monster = event[0].subject;
+
+        const monster = eventJson.monsterName;
         const monsterJson = monsterManager.getMonster(monster);
 
         const attackCalculator = (attackerStr, defenserDef, defenserHP) => {
@@ -182,49 +185,56 @@ app.post("/action", authentication, async (req, res) => {
 
         let playerHP = player.hp;
         let monsterHP = monsterJson.hp;
+        let battleCount = 0;
 
-        while (playerHP > player.hp * 0.2) {
+        while (playerHP > player.hp * 0.2 && battleCount <= 10) {
           const playerStr = +player.str + player.itemStr;
           const playerDef = +player.def + player.itemDef;
 
           attackCalculator(playerStr, monsterJson.def, monsterHP);
           attackCalculator(monsterJson.str, playerDef, playerHP);
+          battleCount++;
+
           if (monsterHP <= 0) {
             player.incrementExp(monsterJson.id);
             break;
           }
         }
 
-        const choice = "continue/run";
+        if (action.choice) {
+          if (action.choice === "continue") {
+            while (playerHP) {
+              const playerStr = +player.str + player.itemStr;
+              const playerDef = +player.def + player.itemDef;
 
-        if (choice === "continue") {
-          while (playerHP) {
-            const playerStr = +player.str + player.itemStr;
-            const playerDef = +player.def + player.itemDef;
+              attackCalculator(playerStr, monsterJson.def, monsterHP);
+              attackCalculator(monsterJson.str, playerDef, playerHP);
+              if (monsterHP <= 0) {
+                player.incrementExp(monsterJson.id);
+                break;
+              }
 
-            attackCalculator(playerStr, monsterJson.def, monsterHP);
-            attackCalculator(monsterJson.str, playerDef, playerHP);
-            if (monsterHP <= 0) {
-              player.incrementExp(monsterJson.id);
-              break;
+              if (playerHP <= 0) {
+                player.HP = player.maxHP;
+                player.x = 0;
+                player.y = 0;
+                const randomItem = Math.round(Math.random() * 4);
+                player.items.splice(randomItem, 1);
+                await player.save();
+                break;
+              }
             }
 
-            if (playerHP <= 0) {
-              player.HP = player.maxHP;
-              player.x = 0;
-              player.y = 0;
-              await player.save();
-              break;
-            }
+            return console.log("전투결과");
+          } else if (action.choice === "run") {
+            return console.log("도망갈 곳을 선택하세요.");
           }
-        } else if (choice === "run") {
-          console.log("도망갈 곳을 선택하세요.");
         }
-      } else if (event[0] === "heal") {
-        const healAmount = event[0].subject;
+      } else if (eventJson.event === "heal") {
+        const healAmount = eventJson.healAmount;
         player.incrementHP(healAmount);
-      } else if (event[0] === "item") {
-        const item = event[0].subject;
+      } else if (eventJson.event === "item") {
+        const item = eventJson.itemName;
 
         player.itemToInventory(item);
         const inventoryItemStr = [];
@@ -249,11 +259,12 @@ app.post("/action", authentication, async (req, res) => {
         player.itemDef = maxDef;
 
         await player.save();
-      } else if (event[0] === "none") {
+      } else if (eventJson.event === "none") {
         console.log("아무 일도 일어나지 않았다.");
       }
     }
   }
+
 
   field.canGo.forEach((direction, i) => {
     if (direction === 1)
