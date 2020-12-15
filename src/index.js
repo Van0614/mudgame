@@ -82,7 +82,7 @@ app.post("/signup", async (req, res) => {
 
 app.post("/stat", async (req, res) => {
   // Change starting stat, deduct change by 1
-  const { id, password, str, def, hp, final } = req.body;
+  const { id, password, str, def, maxHP, final } = req.body;
   const player = await Player.findOne({
     id,
     password: encryptPassword(password)
@@ -90,8 +90,8 @@ app.post("/stat", async (req, res) => {
   if (player.statChangeChance > 0 || final === "true") {
     player.str = str;
     player.def = def;
-    player.maxHP = hp;
-    player.HP = hp;
+    player.maxHP = maxHP;
+    player.HP = maxHP;
     player.statChangeChance -= 1;
     if (final === true || final === "true") {
       player.statChangeChance = 0;
@@ -103,7 +103,7 @@ app.post("/stat", async (req, res) => {
       chance: player.statChangeChance,
       str: str,
       def: def,
-      maxHP: hp
+      maxHP: maxHP
     });
   } else {
     return res
@@ -186,12 +186,12 @@ app.post("/action", authentication, async (req, res) => {
           }
         };
 
-        let playerHP = player.hp;
+        let playerHP = player.HP;
         let monsterHP = monsterJson.hp;
         let battleCount = 0;
         let battleStatus = "fighting";
 
-        while (playerHP > player.hp * 0.2 && battleCount <= 10) {
+        while (playerHP > player.HP * 0.2 && battleCount <= 10) {
           const playerStr = player.str + player.itemStr;
           const playerDef = player.def + player.itemDef;
 
@@ -202,6 +202,7 @@ app.post("/action", authentication, async (req, res) => {
           if (monsterHP <= 0) {
             player.incrementExp(monsterJson.id);
             battleStatus = "won";
+            eventJson.event = "win";
             break;
           }
         }
@@ -277,6 +278,7 @@ app.post("/action", authentication, async (req, res) => {
     monsterJson.message = "몬스터와 싸우는 중이다.";
     const monsterHP = req.body.monsterHP;
     const playerHP = req.player.HP;
+    eventJson.event = "fighting";
 
     if (req.body.continue) {
       if (req.body.continue === "true") {
@@ -298,16 +300,8 @@ app.post("/action", authentication, async (req, res) => {
           attackCalculator(monsterJson.str, playerDef, playerHP);
           if (monsterHP <= 0) {
             player.incrementExp(monsterJson.id);
+            eventJson.event = "fighting";
             await player.save();
-            field.canGo.forEach((direction, i) => {
-              // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
-              if (direction === 1)
-                actions.push({
-                  url: "/action",
-                  text: i,
-                  params: { direction: i, action: "move" }
-                });
-            });
             break;
           }
 
@@ -324,22 +318,14 @@ app.post("/action", authentication, async (req, res) => {
 
         return console.log("전투결과");
       } else if (req.body.continue === false) {
-        field.canGo.forEach((direction, i) => {
-          // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
-          if (direction === 1)
-            actions.push({
-              url: "/action",
-              text: i,
-              params: { direction: i, action: "move" }
-            });
-        });
-        return console.log("도망갈 곳을 선택하세요.");
+        return (eventJson.event = "run");
       }
     }
   }
 
   console.log(eventJson);
   if (eventJson.event !== "battle") {
+    actions = [];
     field.canGo.forEach((direction, i) => {
       // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
       if (direction === 1)
