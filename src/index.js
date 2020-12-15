@@ -205,36 +205,45 @@ app.post("/action", authentication, async (req, res) => {
         }
         if (battleStatus === 'fighting') {
           // TODO addContinueFight 여기에서 함수 사용!
-        }
+          const addContinueFight = (actions, text, booleanValue) => {
+            actions.push({
+              url: "/action",
+              text: text,
+              params: {continue: booleanValue}
+            });
+          };
+          //어떻게 구현되는지 모르겠어요...
+          const selectFight = addContinueFight(actions, "계속 싸운다", true);
+          const selectRun = addContinueFight(actions, "도망간다", false);
 
-        if (action.choice) {
-          if (action.choice === "continue") {
-            while (playerHP) {
-              const playerStr = +player.str + player.itemStr;
-              const playerDef = +player.def + player.itemDef;
-
-              attackCalculator(playerStr, monsterJson.def, monsterHP);
-              attackCalculator(monsterJson.str, playerDef, playerHP);
-              if (monsterHP <= 0) {
-                player.incrementExp(monsterJson.id);
-                break;
+          if (req.body.continue) {
+            if (req.body.continue === true) {
+              while (playerHP) {
+                const playerStr = +player.str + player.itemStr;
+                const playerDef = +player.def + player.itemDef;
+  
+                attackCalculator(playerStr, monsterJson.def, monsterHP);
+                attackCalculator(monsterJson.str, playerDef, playerHP);
+                if (monsterHP <= 0) {
+                  player.incrementExp(monsterJson.id);
+                  break;
+                }
+  
+                if (playerHP <= 0) {
+                  player.HP = player.maxHP;
+                  player.x = 0;
+                  player.y = 0;
+                  const randomItem = Math.round(Math.random() * 4);
+                  player.items.splice(randomItem, 1);
+                  await player.save();
+                  break;
+                }
               }
-
-              if (playerHP <= 0) {
-                player.HP = player.maxHP;
-                player.x = 0;
-                player.y = 0;
-                const randomItem = Math.round(Math.random() * 4);
-                player.items.splice(randomItem, 1);
-                // TODO: 사망시 메세지 등등을 추가해야 하지 않을까?
-                await player.save();
-                break;
-              }
+  
+              return console.log("전투결과");
+            } else if (req.body.continue === false) {
+              return console.log("도망갈 곳을 선택하세요.");
             }
-
-            return console.log("전투결과"); // TODO: response에 포함시키기
-          } else if (action.choice === "run") {
-            return console.log("도망갈 곳을 선택하세요."); // TODO: response에 포함시키기
           }
         }
       } else if (eventJson.event === "heal") {
