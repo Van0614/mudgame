@@ -82,7 +82,7 @@ app.post("/signup", async (req, res) => {
 
 app.post("/stat", async (req, res) => {
   // Change starting stat, deduct change by 1
-  const { id, password, str, def, hp, final } = req.body;
+  const { id, password, str, def, maxHP, final } = req.body;
   const player = await Player.findOne({
     id,
     password: encryptPassword(password)
@@ -90,8 +90,8 @@ app.post("/stat", async (req, res) => {
   if (player.statChangeChance > 0 || final === "true") {
     player.str = str;
     player.def = def;
-    player.maxHP = hp;
-    player.HP = hp;
+    player.maxHP = maxHP;
+    player.HP = maxHP;
     player.statChangeChance -= 1;
     if (final === true || final === "true") {
       player.statChangeChance = 0;
@@ -103,7 +103,7 @@ app.post("/stat", async (req, res) => {
       chance: player.statChangeChance,
       str: str,
       def: def,
-      maxHP: hp
+      maxHP: maxHP
     });
   } else {
     return res
@@ -178,30 +178,33 @@ app.post("/action", authentication, async (req, res) => {
 
         const attackCalculator = (attackerStr, defenserDef, defenserHP) => {
           if (attackerStr > defenserDef) {
-            defenserHP = defenserHP - (attackerStr - defenserDef);
+            defenserHP = +defenserHP - 0 - (+attackerStr - 0 - defenserDef);
             return defenserHP;
           } else {
-            defenserHP--;
+            defenserHP = +defenserHP - 0 - 1;
             return defenserHP;
           }
         };
 
-        let playerHP = player.hp;
+        let playerHP = player.HP;
         let monsterHP = monsterJson.hp;
         let battleCount = 0;
         let battleStatus = "fighting";
 
-        while (playerHP > player.hp * 0.2 && battleCount <= 10) {
-          const playerStr = player.str + player.itemStr;
-          const playerDef = player.def + player.itemDef;
+        while (playerHP > player.HP * 0.2 && battleCount <= 10) {
+          const playerStr = +player.str + player.itemStr;
+          const playerDef = +player.def + player.itemDef;
 
-          attackCalculator(playerStr, monsterJson.def, monsterHP);
-          attackCalculator(monsterJson.str, playerDef, playerHP);
-          battleCount++;
+          monsterHP = attackCalculator(playerStr, monsterJson.def, monsterHP);
+          player.HP = attackCalculator(monsterJson.str, playerDef, playerHP);
+          battleCount = +battleCount + 1;
+          await player.save();
 
           if (monsterHP <= 0) {
             player.incrementExp(monsterJson.id);
             battleStatus = "won";
+            eventJson.event = "win";
+            await player.save();
             break;
           }
         }
@@ -254,14 +257,12 @@ app.post("/action", authentication, async (req, res) => {
         });
         const maxStr = inventoryItemStr[inventoryItemStr.length - 1];
         player.itemStr = maxStr;
-        player.str += maxStr;
 
         inventoryItemDef.sort(function (a, b) {
           return a - b;
         });
         const maxDef = inventoryItemDef[inventoryItemDef.length - 1];
         player.itemDef = maxDef;
-        player.def += maxDef;
 
         await player.save();
       } else if (eventJson.event === "none") {
@@ -276,9 +277,9 @@ app.post("/action", authentication, async (req, res) => {
     eventJson = eventChooser(player.x, player.y, player.randomPlayerKey);
     const monster = eventJson.monsterName;
     const monsterJson = monsterManager.getMonster(monster);
-    monsterJson.message = "몬스터와 싸우는 중이다.";
-    const monsterHP = req.body.monsterHP;
-    const playerHP = req.player.HP;
+    let monsterHP = req.body.monsterHP;
+    let playerHP = req.player.HP;
+    eventJson.event = "fighting";
 
     if (req.body.continue) {
       if (req.body.continue === "true") {
@@ -288,60 +289,51 @@ app.post("/action", authentication, async (req, res) => {
 
           const attackCalculator = (attackerStr, defenserDef, defenserHP) => {
             if (attackerStr > defenserDef) {
-              defenserHP = defenserHP - (attackerStr - defenserDef);
+              defenserHP = defenserHP - 0 - (attackerStr - 0 - defenserDef);
               return defenserHP;
             } else {
-              defenserHP--;
+              defenserHP = defenserHP - 0 - 1;
               return defenserHP;
             }
           };
 
-          attackCalculator(playerStr, monsterJson.def, monsterHP);
-          attackCalculator(monsterJson.str, playerDef, playerHP);
+          monsterHP = attackCalculator(playerStr, monsterJson.def, monsterHP);
+          player.HP = attackCalculator(monsterJson.str, playerDef, playerHP);
+          await player.save();
           if (monsterHP <= 0) {
             player.incrementExp(monsterJson.id);
+            eventJson.event = "win";
+            console.log("이겼습니다.");
             await player.save();
-            field.canGo.forEach((direction, i) => {
-              // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
-              if (direction === 1)
-                actions.push({
-                  url: "/action",
-                  text: i,
-                  params: { direction: i, action: "move" }
-                });
-            });
             break;
           }
 
           if (playerHP <= 0) {
+            eventJson.event = "die";
             player.HP = player.maxHP;
             player.x = 0;
             player.y = 0;
             const randomItem = Math.round(Math.random() * 4);
             player.items.splice(randomItem, 1);
             await player.save();
+            console.log("사망했습니다.");
+            actions.push({
+              url: "/action",
+              text: "부활",
+              params: { action: "query" }
+            });
             break;
           }
         }
-
-        return console.log("전투결과");
       } else if (req.body.continue === false) {
-        field.canGo.forEach((direction, i) => {
-          // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
-          if (direction === 1)
-            actions.push({
-              url: "/action",
-              text: i,
-              params: { direction: i, action: "move" }
-            });
-        });
-        return console.log("도망갈 곳을 선택하세요.");
+        return (eventJson.event = "run");
       }
     }
   }
 
   console.log(eventJson);
-  if (eventJson.event !== "battle") {
+  if (eventJson.event !== "battle" && eventJson.event !== "die") {
+    actions = [];
     field.canGo.forEach((direction, i) => {
       // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
       if (direction === 1)
