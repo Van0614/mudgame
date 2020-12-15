@@ -200,37 +200,9 @@ app.post("/action", authentication, async (req, res) => {
             player.incrementExp(monsterJson.id);
             break;
           }
-        }
+        } 
 
-        if (action.choice) {
-          if (action.choice === "continue") {
-            while (playerHP) {
-              const playerStr = +player.str + player.itemStr;
-              const playerDef = +player.def + player.itemDef;
-
-              attackCalculator(playerStr, monsterJson.def, monsterHP);
-              attackCalculator(monsterJson.str, playerDef, playerHP);
-              if (monsterHP <= 0) {
-                player.incrementExp(monsterJson.id);
-                break;
-              }
-
-              if (playerHP <= 0) {
-                player.HP = player.maxHP;
-                player.x = 0;
-                player.y = 0;
-                const randomItem = Math.round(Math.random() * 4);
-                player.items.splice(randomItem, 1);
-                await player.save();
-                break;
-              }
-            }
-
-            return console.log("전투결과");
-          } else if (action.choice === "run") {
-            return console.log("도망갈 곳을 선택하세요.");
-          }
-        }
+        
       } else if (eventJson.event === "heal") {
         const healAmount = eventJson.healAmount;
         player.incrementHP(healAmount);
