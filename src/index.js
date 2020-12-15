@@ -198,9 +198,10 @@ app.post("/action", authentication, async (req, res) => {
         // 회복량은 5 - distanceFromCenter에 비례하면 좋다.
       }
     
-    
       return response
     }
+
+    eventChooser(player.x, player.y, randomKey); //Todo: 로그인시 random 키 발급하는 내용 추가 필요
 
     const event = field.events;
 
