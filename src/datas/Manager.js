@@ -64,8 +64,7 @@ class ItemManager extends Manager {
         id: data.id,
         name: data.name,
         str: data.str,
-        def: data.def,
-        hp: data.hp
+        def: data.def
       };
     });
   }

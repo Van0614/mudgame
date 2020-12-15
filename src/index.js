@@ -178,10 +178,10 @@ app.post("/action", authentication, async (req, res) => {
 
         const attackCalculator = (attackerStr, defenserDef, defenserHP) => {
           if (attackerStr > defenserDef) {
-            defenserHP = defenserHP - (attackerStr - defenserDef);
+            defenserHP = +defenserHP - 0 - (+attackerStr - 0 - defenserDef);
             return defenserHP;
           } else {
-            defenserHP--;
+            defenserHP = +defenserHP - 0 - 1;
             return defenserHP;
           }
         };
@@ -192,17 +192,19 @@ app.post("/action", authentication, async (req, res) => {
         let battleStatus = "fighting";
 
         while (playerHP > player.HP * 0.2 && battleCount <= 10) {
-          const playerStr = player.str + player.itemStr;
-          const playerDef = player.def + player.itemDef;
+          const playerStr = +player.str + player.itemStr;
+          const playerDef = +player.def + player.itemDef;
 
-          attackCalculator(playerStr, monsterJson.def, monsterHP);
-          attackCalculator(monsterJson.str, playerDef, playerHP);
-          battleCount++;
+          monsterHP = attackCalculator(playerStr, monsterJson.def, monsterHP);
+          player.HP = attackCalculator(monsterJson.str, playerDef, playerHP);
+          battleCount = +battleCount + 1;
+          await player.save();
 
           if (monsterHP <= 0) {
             player.incrementExp(monsterJson.id);
             battleStatus = "won";
             eventJson.event = "win";
+            await player.save();
             break;
           }
         }
@@ -275,9 +277,8 @@ app.post("/action", authentication, async (req, res) => {
     eventJson = eventChooser(player.x, player.y, player.randomPlayerKey);
     const monster = eventJson.monsterName;
     const monsterJson = monsterManager.getMonster(monster);
-    monsterJson.message = "몬스터와 싸우는 중이다.";
-    const monsterHP = req.body.monsterHP;
-    const playerHP = req.player.HP;
+    let monsterHP = req.body.monsterHP;
+    let playerHP = req.player.HP;
     eventJson.event = "fighting";
 
     if (req.body.continue) {
@@ -288,19 +289,20 @@ app.post("/action", authentication, async (req, res) => {
 
           const attackCalculator = (attackerStr, defenserDef, defenserHP) => {
             if (attackerStr > defenserDef) {
-              defenserHP = defenserHP - (attackerStr - defenserDef);
+              defenserHP = defenserHP - 0 - (attackerStr - 0 - defenserDef);
               return defenserHP;
             } else {
-              defenserHP--;
+              defenserHP = defenserHP - 0 - 1;
               return defenserHP;
             }
           };
 
-          attackCalculator(playerStr, monsterJson.def, monsterHP);
-          attackCalculator(monsterJson.str, playerDef, playerHP);
+          monsterHP = attackCalculator(playerStr, monsterJson.def, monsterHP);
+          player.HP = attackCalculator(monsterJson.str, playerDef, playerHP);
+          await player.save();
           if (monsterHP <= 0) {
             player.incrementExp(monsterJson.id);
-            eventJson.event = "fighting";
+            eventJson.event = "win";
             await player.save();
             break;
           }
