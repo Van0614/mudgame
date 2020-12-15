@@ -142,14 +142,16 @@ const eventChooser = (x, y, randomKey) => {
   } else if (placeSeed < 8) {
     response.event = "battle";
     response.monsterName = distanceMonster[+5 - distanceFromCenter].name;
-    response.message = response.monsterName + "가 싸움을 걸어왔다";
+    response.message = messages[5 - distanceFromCenter] + '\n  '
+    response.monsterName + "가 싸움을 걸어왔다";
   } else if (placeSeed < 9) {
     response.event = "item";
     response.itemName = distanceItems[5 - distanceFromCenter].name;
+    response.message = messages[5 - distanceFromCenter] + ` 상자 속에서 ${response.itemName}을 얻었다!`;
   } else {
     response.event = "heal";
     response.message =
-      messages[5 - distanceFromCenter] + " 누군가 음식을 두고 갔다.";
+      messages[5 - distanceFromCenter] + "\n 누군가 음식을 두고 갔다.";
     response.healAmount = 7 - distanceFromCenter;
   }
 
