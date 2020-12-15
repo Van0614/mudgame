@@ -1,5 +1,4 @@
 const express = require("express");
-const fs = require("fs");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
 const { encryptPassword } = require("./util.js");
@@ -135,8 +134,6 @@ app.post("/signin", async (req, res) => {
 app.post("/action", authentication, async (req, res) => {
   const { action } = req.body;
   const player = req.player;
-  console.log(player);
-  console.log(req.body);
   let event = null;
   let field = null;
   let actions = [];
@@ -168,7 +165,6 @@ app.post("/action", authentication, async (req, res) => {
     eventJson = eventChooser(player.x, player.y, player.randomPlayerKey);
 
     if (eventJson) {
-      console.log(eventJson.message);
 
       if (eventJson.event === "battle") {
         // TODO: 이벤트 별로 events.json 에서 불러와 이벤트 처리
@@ -242,7 +238,6 @@ app.post("/action", authentication, async (req, res) => {
         const inventoryItemStr = [];
         const inventoryItemDef = [];
 
-        console.log(player.items);
         player.items.forEach((e) => {
           const itemJson = itemManager.getItem(e);
           inventoryItemStr.push(itemJson.str);
