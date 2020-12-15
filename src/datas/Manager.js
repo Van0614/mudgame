@@ -164,6 +164,14 @@ const eventChooser = (x, y, randomKey) => {  // Todo: randomkey는 player.random
   return response
 }
 
+const addContinueFight = (actions, text, booleanValue) => {
+  actions.push({
+    url: "/action",
+    text: text,
+    params: {continue: booleanValue}
+  });
+};
+
 
 module.exports = {
   constantManager,
@@ -171,5 +179,6 @@ module.exports = {
   monsterManager,
   itemManager,
   eventManager,
-  eventChooser
+  eventChooser,
+  addContinueFight
 };
