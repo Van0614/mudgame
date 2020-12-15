@@ -2,36 +2,34 @@ const express = require("express");
 const fs = require("fs");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
-const {encryptPassword} = require("./util.js");
+const { encryptPassword } = require("./util.js");
 
 const {
   constantManager,
   mapManager,
   monsterManager,
   itemManager,
-  eventManager,
-  eventChooser,
-  addContinueFight
+  eventChooser
 } = require("./datas/Manager");
-const {Player} = require("./models/Player");
+const { Player } = require("./models/Player");
 
 const app = express();
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
 app.engine("html", require("ejs").renderFile);
 
 mongoose.connect(
   "mongodb+srv://vanessa:actjhj614^^@cluster0.gtu8i.mongodb.net/games?retryWrites=true&w=majority",
-  {useNewUrlParser: true, useUnifiedTopology: true}
+  { useNewUrlParser: true, useUnifiedTopology: true }
 );
 
 const authentication = async (req, res, next) => {
-  const {authorization} = req.headers;
+  const { authorization } = req.headers;
   if (!authorization) return res.sendStatus(401);
   const [bearer, key] = authorization.split(" ");
   if (bearer !== "Bearer") return res.sendStatus(401);
-  const player = await Player.findOne({key});
+  const player = await Player.findOne({ key });
   if (!player) return res.sendStatus(401);
 
   req.player = player;
@@ -39,7 +37,7 @@ const authentication = async (req, res, next) => {
 };
 
 app.get("/", (req, res) => {
-  res.render("index", {gameName: constantManager.gameName});
+  res.render("index", { gameName: constantManager.gameName });
 });
 
 app.get("/game", (req, res) => {
@@ -47,14 +45,14 @@ app.get("/game", (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
-  const {id, password, name} = req.body;
+  const { id, password, name } = req.body;
   const encryptedPassword = encryptPassword(password);
 
-  if (await Player.exists({id})) {
+  if (await Player.exists({ id })) {
     // 새롭게 계정을 만드는 경우.
     return res
       .status(400)
-      .send({error: "Player with same id already exists"});
+      .send({ error: "Player with same id already exists" });
   } else {
     const player = new Player({
       id,
@@ -84,7 +82,7 @@ app.post("/signup", async (req, res) => {
 
 app.post("/stat", async (req, res) => {
   // Change starting stat, deduct change by 1
-  const {id, password, str, def, hp, final} = req.body;
+  const { id, password, str, def, hp, final } = req.body;
   const player = await Player.findOne({
     id,
     password: encryptPassword(password)
@@ -92,8 +90,8 @@ app.post("/stat", async (req, res) => {
   if (player.statChangeChance > 0 || final === "true") {
     player.str = str;
     player.def = def;
-    player.MaxHp = hp;
-    player.Hp = hp;
+    player.maxHP = hp;
+    player.HP = hp;
     player.statChangeChance -= 1;
     if (final === true || final === "true") {
       player.statChangeChance = 0;
@@ -105,18 +103,18 @@ app.post("/stat", async (req, res) => {
       chance: player.statChangeChance,
       str: str,
       def: def,
-      MaxHP: hp
+      maxHP: hp
     });
   } else {
     return res
       .status(400)
-      .send({error: "Chance all used up. Cannot change stat"});
+      .send({ error: "Chance all used up. Cannot change stat" });
   }
 });
 
 app.post("/signin", async (req, res) => {
-  const {id, password} = req.body;
-  if (await Player.exists({id, password: encryptPassword(password)})) {
+  const { id, password } = req.body;
+  if (await Player.exists({ id, password: encryptPassword(password) })) {
     // TODO: auth 체크
     const key = crypto.randomBytes(24).toString("hex");
     const player = await Player.findOne({
@@ -126,23 +124,23 @@ app.post("/signin", async (req, res) => {
     player.key = key;
     player.randomPlayerKey = Math.random();
     await player.save();
-    return res.send({key});
+    return res.send({ key });
   } else {
     return res
       .status(400)
-      .send({error: "No such player. Wrong id or password"});
+      .send({ error: "No such player. Wrong id or password" });
   }
 });
 
 app.post("/action", authentication, async (req, res) => {
-  const {action} = req.body;
+  const { action } = req.body;
   const player = req.player;
-  console.log(player)
-  console.log(req.body)
+  console.log(player);
+  console.log(req.body);
   let event = null;
   let field = null;
   let actions = [];
-  let eventJson = {}
+  let eventJson = {};
   if (action === "query") {
     field = mapManager.getField(req.player.x, req.player.y);
   } else if (action === "move") {
@@ -164,7 +162,7 @@ app.post("/action", authentication, async (req, res) => {
     if (!field) res.sendStatus(400);
     player.x = x;
     player.y = y;
-    await player.save()
+    await player.save();
 
     // TODO: 만약 이미 전투중인 경우 이 함수를 실행하지 않고 전투를 진행한다!
     eventJson = eventChooser(player.x, player.y, player.randomPlayerKey);
@@ -191,8 +189,8 @@ app.post("/action", authentication, async (req, res) => {
         let playerHP = player.hp;
         let monsterHP = monsterJson.hp;
         let battleCount = 0;
+        let battleStatus = "fighting";
 
-        let battleStatus = 'fighting'
         while (playerHP > player.hp * 0.2 && battleCount <= 10) {
           const playerStr = player.str + player.itemStr;
           const playerDef = player.def + player.itemDef;
@@ -203,52 +201,35 @@ app.post("/action", authentication, async (req, res) => {
 
           if (monsterHP <= 0) {
             player.incrementExp(monsterJson.id);
-            battleStatus = 'won'
+            battleStatus = "won";
             break;
           }
         }
-        await player.save()
-        if (battleStatus === 'fighting') {
+        await player.save();
+
+        if (battleStatus === "fighting") {
           // TODO addContinueFight 여기에서 함수 사용!
-          const addContinueFight = (actions, text, booleanValue) => {
+
+          const addContinueFight = (actions, text, booleanValue, monsterHP) => {
             actions.push({
               url: "/action",
               text: text,
-              params: {continue: booleanValue}
+              params: {
+                action: "fighting",
+                continue: booleanValue,
+                monsterHP: monsterHP
+              }
             });
           };
-          addContinueFight(actions, "계속 싸운다", true);
-          addContinueFight(actions, "도망간다", false);
 
-          if (req.body.continue) {
-            if (req.body.continue === 'true') {
-              while (playerHP) {
-                const playerStr = +player.str + player.itemStr;
-                const playerDef = +player.def + player.itemDef;
-
-                attackCalculator(playerStr, monsterJson.def, monsterHP);
-                attackCalculator(monsterJson.str, playerDef, playerHP);
-                if (monsterHP <= 0) {
-                  player.incrementExp(monsterJson.id);
-                  break;
-                }
-
-                if (playerHP <= 0) {
-                  player.HP = player.maxHP;
-                  player.x = 0;
-                  player.y = 0;
-                  const randomItem = Math.round(Math.random() * 4);
-                  player.items.splice(randomItem, 1);
-                  await player.save();
-                  break;
-                }
-              }
-
-              return console.log("전투결과");
-            } else if (req.body.continue === false) {
-              return console.log("도망갈 곳을 선택하세요.");
-            }
-          }
+          const fightArray = [
+            { text: "계속 싸운다", continue: "true" },
+            { text: "도망간다", continue: "false" }
+          ];
+          fightArray.forEach((e) => {
+            const monsterRemainHP = monsterHP;
+            addContinueFight(actions, e.text, e.continue, monsterRemainHP);
+          });
         }
       } else if (eventJson.event === "heal") {
         const healAmount = eventJson.healAmount;
@@ -257,11 +238,11 @@ app.post("/action", authentication, async (req, res) => {
         const item = eventJson.itemName;
 
         player.itemToInventory(item);
-        await player.save()
+        await player.save();
         const inventoryItemStr = [];
         const inventoryItemDef = [];
 
-        console.log(player.items)
+        console.log(player.items);
         player.items.forEach((e) => {
           const itemJson = itemManager.getItem(e);
           inventoryItemStr.push(itemJson.str);
@@ -285,25 +266,96 @@ app.post("/action", authentication, async (req, res) => {
         console.log("아무 일도 일어나지 않았다.");
       }
     }
+  } else if (action === "fighting") {
+    const x = req.player.x;
+    const y = req.player.y;
+    field = mapManager.getField(x, y);
+
+    eventJson = eventChooser(player.x, player.y, player.randomPlayerKey);
+    const monster = eventJson.monsterName;
+    const monsterJson = monsterManager.getMonster(monster);
+    monsterJson.message = "몬스터와 싸우는 중이다.";
+    const monsterHP = req.body.monsterHP;
+    const playerHP = req.player.HP;
+
+    if (req.body.continue) {
+      if (req.body.continue === "true") {
+        while (playerHP) {
+          const playerStr = +player.str + player.itemStr;
+          const playerDef = +player.def + player.itemDef;
+
+          const attackCalculator = (attackerStr, defenserDef, defenserHP) => {
+            if (attackerStr > defenserDef) {
+              defenserHP = defenserHP - (attackerStr - defenserDef);
+              return defenserHP;
+            } else {
+              defenserHP--;
+              return defenserHP;
+            }
+          };
+
+          attackCalculator(playerStr, monsterJson.def, monsterHP);
+          attackCalculator(monsterJson.str, playerDef, playerHP);
+          if (monsterHP <= 0) {
+            player.incrementExp(monsterJson.id);
+            await player.save();
+            field.canGo.forEach((direction, i) => {
+              // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
+              if (direction === 1)
+                actions.push({
+                  url: "/action",
+                  text: i,
+                  params: { direction: i, action: "move" }
+                });
+            });
+            break;
+          }
+
+          if (playerHP <= 0) {
+            player.HP = player.maxHP;
+            player.x = 0;
+            player.y = 0;
+            const randomItem = Math.round(Math.random() * 4);
+            player.items.splice(randomItem, 1);
+            await player.save();
+            break;
+          }
+        }
+
+        return console.log("전투결과");
+      } else if (req.body.continue === false) {
+        field.canGo.forEach((direction, i) => {
+          // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
+          if (direction === 1)
+            actions.push({
+              url: "/action",
+              text: i,
+              params: { direction: i, action: "move" }
+            });
+        });
+        return console.log("도망갈 곳을 선택하세요.");
+      }
+    }
   }
 
-  console.log(eventJson)
-  if (eventJson.event !== "battle" && req.body.continue !== 'true') {
-    field.canGo.forEach((direction, i) => { // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
+  console.log(eventJson);
+  if (eventJson.event !== "battle") {
+    field.canGo.forEach((direction, i) => {
+      // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
       if (direction === 1)
         actions.push({
           url: "/action",
           text: i,
-          params: {direction: i, action: "move"}
+          params: { direction: i, action: "move" }
         });
     });
   }
   if (field === null) {
     field = mapManager.getField(player.x, player.y);
   }
-  field.description = eventJson.message
+  field.description = eventJson.message;
   // TODO: event.description 에 여러가지 메세지를 담기. 아니면 배열에 메세지를 여러개 담아도 좋다.
-  return res.send({player, field, event, actions});
+  return res.send({ player, field, event, actions });
 });
 
 app.listen(3000);
