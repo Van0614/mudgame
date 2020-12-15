@@ -136,14 +136,14 @@ const eventChooser = (x, y, randomKey) => {
     healAmount: 0
     // TODO: 여기에 소환된 몬스터의 능력치나, 얻은 아이템의 능력치, 회복량 등을 잘 담으면 된다. 자료 형식이 결정되면 다른 조원들이게 알려주자
   };
-  if (placeSeed < 7) {
+  if (placeSeed < 6) {
     response.event = "none";
     response.message = messages[5 - distanceFromCenter];
-  } else if (placeSeed < 8) {
+  } else if (placeSeed < 8.5) {
     response.event = "battle";
-    response.message = "몬스터가 싸움을 걸어왔다";
     response.monsterName = distanceMonster[5 - distanceFromCenter].name;
-  } else if (placeSeed < 9) {
+    response.message = reponse.monsterName +"가 싸움을 걸어왔다";
+  } else if (placeSeed < 9.5) {
     response.event = "item";
     response.itemName = distanceItems[5 - distanceFromCenter].name;
   } else {
