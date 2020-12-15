@@ -137,9 +137,12 @@ app.post("/signin", async (req, res) => {
 app.post("/action", authentication, async (req, res) => {
   const {action} = req.body;
   const player = req.player;
+  console.log(player)
+  console.log(req.body)
   let event = null;
   let field = null;
   let actions = [];
+  let eventJson = {}
   if (action === "query") {
     field = mapManager.getField(req.player.x, req.player.y);
   } else if (action === "move") {
@@ -161,9 +164,10 @@ app.post("/action", authentication, async (req, res) => {
     if (!field) res.sendStatus(400);
     player.x = x;
     player.y = y;
+    await player.save()
 
     // TODO: 만약 이미 전투중인 경우 이 함수를 실행하지 않고 전투를 진행한다!
-    const eventJson = eventChooser(player.x, player.y, player.randomPlayerKey);
+    eventJson = eventChooser(player.x, player.y, player.randomPlayerKey);
 
     if (eventJson) {
       console.log(eventJson.message);
@@ -203,6 +207,7 @@ app.post("/action", authentication, async (req, res) => {
             break;
           }
         }
+        await player.save()
         if (battleStatus === 'fighting') {
           // TODO addContinueFight 여기에서 함수 사용!
           const addContinueFight = (actions, text, booleanValue) => {
@@ -212,23 +217,22 @@ app.post("/action", authentication, async (req, res) => {
               params: {continue: booleanValue}
             });
           };
-          //어떻게 구현되는지 모르겠어요...
-          const selectFight = addContinueFight(actions, "계속 싸운다", true);
-          const selectRun = addContinueFight(actions, "도망간다", false);
+          addContinueFight(actions, "계속 싸운다", true);
+          addContinueFight(actions, "도망간다", false);
 
           if (req.body.continue) {
-            if (req.body.continue === true) {
+            if (req.body.continue === 'true') {
               while (playerHP) {
                 const playerStr = +player.str + player.itemStr;
                 const playerDef = +player.def + player.itemDef;
-  
+
                 attackCalculator(playerStr, monsterJson.def, monsterHP);
                 attackCalculator(monsterJson.str, playerDef, playerHP);
                 if (monsterHP <= 0) {
                   player.incrementExp(monsterJson.id);
                   break;
                 }
-  
+
                 if (playerHP <= 0) {
                   player.HP = player.maxHP;
                   player.x = 0;
@@ -239,7 +243,7 @@ app.post("/action", authentication, async (req, res) => {
                   break;
                 }
               }
-  
+
               return console.log("전투결과");
             } else if (req.body.continue === false) {
               return console.log("도망갈 곳을 선택하세요.");
@@ -253,9 +257,11 @@ app.post("/action", authentication, async (req, res) => {
         const item = eventJson.itemName;
 
         player.itemToInventory(item);
+        await player.save()
         const inventoryItemStr = [];
         const inventoryItemDef = [];
 
+        console.log(player.items)
         player.items.forEach((e) => {
           const itemJson = itemManager.getItem(e);
           inventoryItemStr.push(itemJson.str);
@@ -281,21 +287,21 @@ app.post("/action", authentication, async (req, res) => {
     }
   }
 
-
-  field.canGo.forEach((direction, i) => { // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
-    if (direction === 1)
-      actions.push({
-        url: "/action",
-        text: i,
-        params: {direction: i, action: "move"}
-      });
-  });
-  // event.monster = {
-  //   name: '해골',
-  //   hp: 3,
-  //   maxHp: 7
-  // }
-
+  console.log(eventJson)
+  if (eventJson.event !== "battle" && req.body.continue !== 'true') {
+    field.canGo.forEach((direction, i) => { // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
+      if (direction === 1)
+        actions.push({
+          url: "/action",
+          text: i,
+          params: {direction: i, action: "move"}
+        });
+    });
+  }
+  if (field === null) {
+    field = mapManager.getField(player.x, player.y);
+  }
+  field.description = eventJson.message
   // TODO: event.description 에 여러가지 메세지를 담기. 아니면 배열에 메세지를 여러개 담아도 좋다.
   return res.send({player, field, event, actions});
 });

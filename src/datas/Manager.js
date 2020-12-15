@@ -39,13 +39,15 @@ class MonsterManager extends Manager {
     super();
     this.status = {};
 
-    this.status[`${datas.name}`] = {
-      id: datas.id,
-      name: datas.name,
-      str: datas.str,
-      def: datas.def,
-      hp: datas.hp
-    };
+    datas.forEach((data) => {
+      this.status[`${data.name}`] = {
+        id: data.id,
+        name: data.name,
+        str: data.str,
+        def: data.def,
+        hp: data.hp
+      };
+    })
   }
 
   getMonster(name) {
@@ -58,13 +60,15 @@ class ItemManager extends Manager {
     super();
     this.status = {};
 
-    this.status[`${datas.name}`] = {
-      id: datas.id,
-      name: datas.name,
-      str: datas.str,
-      def: datas.def,
-      hp: datas.hp
-    };
+    datas.forEach((data) => {
+      this.status[`${data.name}`] = {
+        id: data.id,
+        name: data.name,
+        str: data.str,
+        def: data.def,
+        hp: data.hp
+      };
+    })
   }
 
   getItem(name) {
@@ -133,10 +137,10 @@ const eventChooser = (x, y, randomKey) => {  // Todo: randomkey는 player.random
   const playerSeed = randomKey.toString().slice(2)
   const placeSeed = parseInt(playerSeed[((11 * x) + y) % 16]) // 0~9 사이의 숫자
   const distanceFromCenter = Math.max((5 - x) * Math.sign(5 - x), (5 - y) * Math.sign(5 - y))
-  
+
   //item, monster 정보 모두 불러온다.
-  const distanceMonster =  JSON.parse(fs.readFileSync(__dirname + "/monsters.json"));
-  const distanceItems =  JSON.parse(fs.readFileSync(__dirname + "/items.json"));
+  const distanceMonster = JSON.parse(fs.readFileSync(__dirname + "/monsters.json"));
+  const distanceItems = JSON.parse(fs.readFileSync(__dirname + "/items.json"));
 
   let response = {
     event: 'none', // none 70%, battle 10%, item 10%, heal 10%
@@ -153,11 +157,11 @@ const eventChooser = (x, y, randomKey) => {  // Todo: randomkey는 player.random
   } else if (placeSeed < 8) {
     response.event = 'battle'
     response.message = '몬스터가 싸움을 걸어왔다'
-    response.monsterName = distanceMonster[5-distanceFromCenter].name;
+    response.monsterName = distanceMonster[5 - distanceFromCenter].name;
 
   } else if (placeSeed < 9) {
     response.event = 'item'
-    response.itemName = distanceItems[5-distanceFromCenter].name;
+    response.itemName = distanceItems[5 - distanceFromCenter].name;
 
   } else {
     response.event = 'heal'
