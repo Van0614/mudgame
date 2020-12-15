@@ -23,9 +23,9 @@ const playerSchema = new Schema({
   maxExp: {type: Number, default: 10},
   level: {type: Number, default: 1},
 
-  statChangeChance: {type: Number, default: 1}
+  statChangeChance: {type: Number, default: 1},
 
-  randomKey: Number,
+  randomPlayerKey: {type: Number, default: 0.6279733963460027},
 });
 
 playerSchema.methods.incrementHP = function (val) {
