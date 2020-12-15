@@ -20,7 +20,7 @@
 </div>
 <div id="status" style="outline: 1px solid green; width:250px; padding:20px;margin-top: 20px">
     이름: <span id="name"> 5 / 5</span> <br>
-    체력: <span id="maxHP"> 5 / 5</span> <br>
+    체력: <span id="hp"> 5 / 5</span> <br>
     공격력: <span id="str"> 5 (+3)</span> <br>
     DEF: <span id="def"> 5 (+3)</span> <br>
     Level: <span id="level"> 5 </span> <br>
@@ -51,8 +51,8 @@
       },
       method: "POST",
       data: $.param(params),
-    }).done((req) => {
-      const {player, field, event, actions} = req;
+    }).done((res) => {
+      const {player, field, event, actions} = res;
 
       $('#game').text(field.description);
       $('#position').text(`x: ${field.x}, y: ${field.y}`);
@@ -60,7 +60,7 @@
       const y = field.y;
 
       $('#control').html('');
-      req.actions.forEach((action) => {
+      actions.forEach((action) => {
         const dom = $('<button></button');
         dom.text(action.text);
         dom.bind('click', function () {
@@ -76,7 +76,12 @@
         $('#event_result').text("이동하자.");
       }
 
-      $('#HP').text(`${player.HP} / ${player.maxHP}`)
+      $('#name').text(player.name)
+      $('#hp').text(`${player.HP} / ${player.maxHP}`)
+      $('#str').text(`${player.str} (+${player.itemStr})`)
+      $('#def').text(`${player.def} (+${player.itemDef})`)
+      $('#level').text(player.level)
+      $('#exp').text(`${player.exp} / ${player.maxExp}`)
     });
 
   }
