@@ -10,7 +10,8 @@ const {
   monsterManager,
   itemManager,
   eventManager,
-  eventChooser
+  eventChooser,
+  addContinueFight
 } = require("./datas/Manager");
 const {Player} = require("./models/Player");
 
@@ -162,7 +163,6 @@ app.post("/action", authentication, async (req, res) => {
     player.y = y;
 
     // TODO: 만약 이미 전투중인 경우 이 함수를 실행하지 않고 전투를 진행한다!
-
     const eventJson = eventChooser(player.x, player.y, player.randomPlayerKey);
 
     if (eventJson) {
@@ -188,9 +188,10 @@ app.post("/action", authentication, async (req, res) => {
         let monsterHP = monsterJson.hp;
         let battleCount = 0;
 
+        let battleStatus = 'fighting'
         while (playerHP > player.hp * 0.2 && battleCount <= 10) {
-          const playerStr = +player.str + player.itemStr;
-          const playerDef = +player.def + player.itemDef;
+          const playerStr = player.str + player.itemStr;
+          const playerDef = player.def + player.itemDef;
 
           attackCalculator(playerStr, monsterJson.def, monsterHP);
           attackCalculator(monsterJson.str, playerDef, playerHP);
@@ -198,11 +199,53 @@ app.post("/action", authentication, async (req, res) => {
 
           if (monsterHP <= 0) {
             player.incrementExp(monsterJson.id);
+            battleStatus = 'won'
             break;
           }
-        } 
+        }
+        if (battleStatus === 'fighting') {
+          // TODO addContinueFight 여기에서 함수 사용!
+          const addContinueFight = (actions, text, booleanValue) => {
+            actions.push({
+              url: "/action",
+              text: text,
+              params: {continue: booleanValue}
+            });
+          };
+          //어떻게 구현되는지 모르겠어요...
+          const selectFight = addContinueFight(actions, "계속 싸운다", true);
+          const selectRun = addContinueFight(actions, "도망간다", false);
 
-        
+          if (req.body.continue) {
+            if (req.body.continue === true) {
+              while (playerHP) {
+                const playerStr = +player.str + player.itemStr;
+                const playerDef = +player.def + player.itemDef;
+  
+                attackCalculator(playerStr, monsterJson.def, monsterHP);
+                attackCalculator(monsterJson.str, playerDef, playerHP);
+                if (monsterHP <= 0) {
+                  player.incrementExp(monsterJson.id);
+                  break;
+                }
+  
+                if (playerHP <= 0) {
+                  player.HP = player.maxHP;
+                  player.x = 0;
+                  player.y = 0;
+                  const randomItem = Math.round(Math.random() * 4);
+                  player.items.splice(randomItem, 1);
+                  await player.save();
+                  break;
+                }
+              }
+  
+              return console.log("전투결과");
+            } else if (req.body.continue === false) {
+              return console.log("도망갈 곳을 선택하세요.");
+            }
+          }
+        }
       } else if (eventJson.event === "heal") {
         const healAmount = eventJson.healAmount;
         player.incrementHP(healAmount);
@@ -239,7 +282,7 @@ app.post("/action", authentication, async (req, res) => {
   }
 
 
-  field.canGo.forEach((direction, i) => {
+  field.canGo.forEach((direction, i) => { // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
     if (direction === 1)
       actions.push({
         url: "/action",
@@ -248,11 +291,12 @@ app.post("/action", authentication, async (req, res) => {
       });
   });
   event.monster = {
-    name:'해골',
-    hp:3,
-    maxHp:7
+    name: '해골',
+    hp: 3,
+    maxHp: 7
   }
 
+  // TODO: event.description 에 여러가지 메세지를 담기. 아니면 배열에 메세지를 여러개 담아도 좋다.
   return res.send({player, field, event, actions});
 });
 
