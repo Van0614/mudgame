@@ -19,7 +19,7 @@
     <button value="0">북</button>
 </div>
 <div id="status"
-     style="outline: 1px solid green; width:250px; padding:20px;margin-top: 20px;display: inline-block; vertical-align:top;"
+     style="outline: 1px solid green; height:170px; width:250px; padding:20px;margin-top: 20px;display: inline-block; vertical-align:top;"
 >
     이름: <span id="name"> 5 / 5</span> <br>
     체력: <span id="hp"> 5 / 5</span> <br>
@@ -32,9 +32,9 @@
     </div>
 </div>
 <div id="item-list"
-     style="outline: 1px solid green; width:250px; padding:20px;margin-top: 20px;display: inline-block; vertical-align:top;"
+     style="outline: 1px solid green;height:170px; width:250px; padding:20px;margin-top: 20px;display: inline-block; vertical-align:top;"
 >
-    내 아이템들
+    &lt; 내 아이템들 &gt;
     <div id="items" style="margin-top: 10px"></div>
 </div>
 
@@ -93,9 +93,17 @@
       $('#level').text(player.level)
       $('#exp').text(`${player.exp} / ${player.maxExp}`)
       $('#items').html('');
+      let playerItems = {}
       player.items.forEach((item) => {
+        if (playerItems[item] === undefined) {
+          playerItems[item] = 1
+        } else {
+          playerItems[item] += 1
+        }
+      });
+      Object.keys(playerItems).forEach((item) => {
         const dom = $('<div></div>');
-        dom.text(item);
+        dom.text(` - ${item} (${playerItems[item]}개)`);
         $('#items').append(dom);
       })
     });
