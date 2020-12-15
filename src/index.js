@@ -290,11 +290,11 @@ app.post("/action", authentication, async (req, res) => {
         params: {direction: i, action: "move"}
       });
   });
-  event.monster = {
-    name: '해골',
-    hp: 3,
-    maxHp: 7
-  }
+  // event.monster = {
+  //   name: '해골',
+  //   hp: 3,
+  //   maxHp: 7
+  // }
 
   // TODO: event.description 에 여러가지 메세지를 담기. 아니면 배열에 메세지를 여러개 담아도 좋다.
   return res.send({player, field, event, actions});
