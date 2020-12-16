@@ -350,5 +350,5 @@ app.post("/action", authentication, async (req, res) => {
 });
 
 app.listen(3000, () => {
-  console.log("Initiating 'Monster Hunter'");
+  console.log("Initiating 'Maze of Mirro'")
 });
