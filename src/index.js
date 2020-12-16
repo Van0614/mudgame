@@ -196,8 +196,9 @@ app.post("/action", authentication, async (req, res) => {
           battleCount++;
 
           if (monsterHP <= 0) {
-            player.incrementExp(monsterJson.id);
+            player.incrementStat(monsterJson.id*3);
             battleStatus = "won";
+            console.log("이겼습니다");
             break;
           }
         }
@@ -292,7 +293,7 @@ app.post("/action", authentication, async (req, res) => {
 
           monsterHP = attackCalculator(playerStr, monsterJson.def, monsterHP);
           if (monsterHP <= 0) {
-            player.incrementExp(monsterJson.id);
+            player.incrementStat(monsterJson.id*3);
             eventJson.event = "win";
             console.log("이겼습니다.");
             await player.save();

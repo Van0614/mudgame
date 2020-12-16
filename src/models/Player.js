@@ -33,13 +33,17 @@ playerSchema.methods.incrementHP = function (val) {
   this.HP = Math.min(Math.max(0, hp), this.maxHP);
 };
 
-playerSchema.methods.incrementExp = function (val) {
+playerSchema.methods.incrementStat = function (val) {
   const addExp = +this.exp + val;
   this.exp = addExp;
   if (this.exp >= this.maxExp) {
     this.exp = this.exp - this.maxExp;
     this.maxExp += 10;
     this.level++;
+    this.str += 3;
+    this.def += 3;
+    this.maxHP += 10;
+    this.HP = this.maxHP;
   }
 };
 
