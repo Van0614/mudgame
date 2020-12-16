@@ -327,10 +327,9 @@ app.post("/action", authentication, async (req, res) => {
     }
   }
 
-  console.log(eventJson);
   if (eventJson.event !== "battle" && eventJson.event !== "die") {
     actions = [];
-    const directions = ["북", "동", "남", "서"];
+    const directions = ["남", "동", "북", "서"];
     field.canGo.forEach((direction, i) => {
       // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
       if (direction === 1)
@@ -349,4 +348,6 @@ app.post("/action", authentication, async (req, res) => {
   return res.send({ player, field, event, actions });
 });
 
-app.listen(3000);
+app.listen(3000, () => {
+  console.log("Initiating 'Monster Hunter'")
+});

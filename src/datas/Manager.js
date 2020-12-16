@@ -2,7 +2,6 @@ const fs = require("fs");
 
 class Manager {
   constructor(datas) {
-    console.log(datas);
   }
 }
 
