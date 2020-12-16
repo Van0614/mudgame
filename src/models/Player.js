@@ -33,7 +33,7 @@ playerSchema.methods.incrementHP = function (val) {
   this.HP = Math.min(Math.max(0, hp), this.maxHP);
 };
 
-playerSchema.methods.incrementStat = function (val) {
+playerSchema.methods.incrementExp = function (val) {
   const addExp = +this.exp + val;
   this.exp = addExp;
   if (this.exp >= this.maxExp) {
@@ -44,6 +44,7 @@ playerSchema.methods.incrementStat = function (val) {
     this.def += 3;
     this.maxHP += 10;
     this.HP = this.maxHP;
+    console.log("레벨업 했습니다! 체력이 회복됩니다.")
   }
 };
 

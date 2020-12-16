@@ -146,7 +146,7 @@ const eventChooser = (x, y, randomKey) => {
     } else if (placeSeed < 8) {
       response.event = "battle";
       response.monsterName = distanceMonster[+5 - distanceFromCenter].name;
-      response.message = messages[5 - distanceFromCenter] + "\n" + response.monsterName + "(이)w가 싸움을 걸어왔다";
+      response.message = messages[5 - distanceFromCenter] + "\n" + response.monsterName + "(이)가 싸움을 걸어왔다";
     } else if (placeSeed < 9) {
       response.event = "item";
       response.itemName = distanceItems[5 - distanceFromCenter].name;
