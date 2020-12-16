@@ -165,7 +165,6 @@ app.post("/action", authentication, async (req, res) => {
     eventJson = eventChooser(player.x, player.y, player.randomPlayerKey);
 
     if (eventJson) {
-
       if (eventJson.event === "battle") {
         // TODO: 이벤트 별로 events.json 에서 불러와 이벤트 처리
 
@@ -196,7 +195,7 @@ app.post("/action", authentication, async (req, res) => {
           battleCount++;
 
           if (monsterHP <= 0) {
-            player.incrementExp(monsterJson.id*3);
+            player.incrementExp(monsterJson.id * 3);
             battleStatus = "won";
             console.log("이겼습니다");
             break;
@@ -293,7 +292,7 @@ app.post("/action", authentication, async (req, res) => {
 
           monsterHP = attackCalculator(playerStr, monsterJson.def, monsterHP);
           if (monsterHP <= 0) {
-            player.incrementExp(monsterJson.id*3);
+            player.incrementExp(monsterJson.id * 3);
             eventJson.event = "win";
             console.log("이겼습니다.");
             await player.save();
@@ -309,7 +308,9 @@ app.post("/action", authentication, async (req, res) => {
             player.HP = player.maxHP;
             player.x = 0;
             player.y = 0;
-            const randomItem = Math.round(Math.random() * 4);
+            const randomItem = Math.round(
+              Math.random() * (player.items.length - 0 - 1)
+            );
             player.items.splice(randomItem, 1);
             await player.save();
             console.log("사망했습니다.");
@@ -329,7 +330,7 @@ app.post("/action", authentication, async (req, res) => {
 
   if (eventJson.event !== "battle" && eventJson.event !== "die") {
     actions = [];
-    const directions = ["남", "동", "북", "서"];
+    const directions = ["북", "동", "남", "서"];
     field.canGo.forEach((direction, i) => {
       // TODO: 전투중이 아닐 때에만 이거 추가하기. 전투중인 경우 이동 불가.
       if (direction === 1)
@@ -349,5 +350,5 @@ app.post("/action", authentication, async (req, res) => {
 });
 
 app.listen(3000, () => {
-  console.log("Initiating 'Monster Hunter'")
+  console.log("Initiating 'Monster Hunter'");
 });
